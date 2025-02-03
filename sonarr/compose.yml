@@ -1,0 +1,22 @@
+##
+# Sonarr - TV show search and retrieval service https://sonarr.tv/
+# Docker Hub: https://hub.docker.com/r/linuxserver/sonarr
+# Wiki: https://wiki.servarr.com/
+##  
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - sonarr:/config                        # Using docker volumes as configurations can be restored from backup
+      - ${PLEX_ROOT}/backups:/config/Backups  # Saves backups to external filesystem for recovery
+      - ${PLEX_MEDIA}:/data                   # Media root
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+volumes:
+  sonarr:

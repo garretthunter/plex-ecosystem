@@ -1,0 +1,22 @@
+##
+# Radarr - Movie search and retrieval service https://radarr.video/
+# Docker Hub: https://hub.docker.com/r/linuxserver/radarr
+# Wiki: https://wiki.servarr.com/
+##
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - radarr:/config                        # Using docker volumes as configurations can be restored from backup
+      - ${PLEX_ROOT}/backups:/config/Backups  # Saves backups to external filesystem for recovery
+      - ${PLEX_MEDIA}:/data                   # Media root
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+volumes:
+  radarr:

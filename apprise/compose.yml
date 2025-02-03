@@ -1,0 +1,18 @@
+##
+# Apprise - Notification service https://github.com/caronc/apprise
+# Docker Hub: https://hub.docker.com/r/caronc/apprise
+# Apprise URL format: apprise://host.docker.internal:8000/token?tags=<tag> | https://github.com/caronc/apprise/wiki/CLI_Usage
+##  
+services:
+  apprise:
+    container_name: 'apprise'
+    image: 'caronc/apprise:latest'
+    restart: unless-stopped  
+    ports:
+      - '8000:8000'
+    volumes:
+      - apprise:/config
+      - apprise:/plugin
+      - apprise:/attach
+volumes:
+  apprise:

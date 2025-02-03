@@ -1,0 +1,29 @@
+##
+# Plex - Media sharing service https://plex.tv
+# Docker Hub: https://hub.docker.com/r/plexinc/pms-docker
+##
+services:
+  plex:
+    build: .
+    container_name: plex
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${PLEX_ROOT}/config/plex:/config  # Moved outside of docker for portability
+      - ${PLEX_MEDIA}:/data               # Media root
+      - ${PLEX_TRANSCODE_TEMP}:/transcode # Transcode temp
+    ports:
+      - 32400:32400/tcp
+      - 3005:3005/tcp
+      - 8324:8324/tcp
+      - 32469:32469/tcp
+      - 1900:1900/udp
+      - 32410:32410/udp 
+      - 32412:32412/udp 
+      - 32413:32413/udp
+      - 32414:32414/udp
+    restart: unless-stopped
+volumes:
+  plex:

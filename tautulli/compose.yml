@@ -1,0 +1,20 @@
+##
+# Tautulli - Plex usage monitoring service https://tautulli.com/
+# Docker Hub: https://hub.docker.com/r/linuxserver/tautulli
+##
+services:
+  tautulli:
+    container_name: tautulli
+    image: lscr.io/linuxserver/tautulli:latest
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - tautulli:/config
+      - ${PLEX_ROOT}/backups:/config/Backups  # Saves backups to external filesystem for recovery
+    ports:
+      - 8181:8181
+volumes:
+  tautulli:

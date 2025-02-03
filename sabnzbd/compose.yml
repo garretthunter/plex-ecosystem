@@ -1,0 +1,21 @@
+##
+# SABnzbd - Usenet download service https://sabnzbd.org/
+# Docker Hub: https://hub.docker.com/r/linuxserver/sabnzbd
+##  
+services:
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - sabnzbd:/config
+      - ${PLEX_ROOT}/backups:/backups # To external filesystem
+      - ${PLEX_MEDIA}/usenet:/data/usenet  # Torrent base directory
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+volumes:
+  sabnzbd:
