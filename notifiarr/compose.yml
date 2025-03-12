@@ -7,7 +7,7 @@ services:
   notifiarr:
     container_name: notifiarr
     image: golift/notifiarr
-    hostname: notifiarr
+    hostname: notifiarr-${hostname}
     restart: unless-stopped
     environment:
       - LOG_LEVEL=debug
