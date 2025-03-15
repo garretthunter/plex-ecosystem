@@ -3,7 +3,7 @@
 ##
 name: plex-ecosystem
 
-include:
+include: 
 #  - plex/compose.yml        # Plex media server (removed as being too slow)
   - apprise/compose.yml     # Notification automation service
   - notifiarr/compose.yml   # Server notification service

@@ -12,7 +12,5 @@ services:
       - '81:81'
       - '443:443'
     volumes:
-      - data:/data
-      - data:/etc/letsencrypt
-volumes:
-    data:
+      - ${PLEX_ROOT}/config/nginx-proxy-manager/data:/data # Moved outside of docker for portability
+      - ${PLEX_ROOT}/config/nginx-proxy-manager/etc/letsencrypt:/etc/letsencrypt # Moved outside of docker for portability

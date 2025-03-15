@@ -11,11 +11,9 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - sabnzbd:/config
+      - ${PLEX_ROOT}/config/sabnzbd:/config # Moved outside of docker for portability
       - ${PLEX_ROOT}/backups:/backups # To external filesystem
       - ${PLEX_MEDIA}/usenet:/data/usenet  # Torrent base directory
     ports:
       - 8080:8080
     restart: unless-stopped
-volumes:
-  sabnzbd:

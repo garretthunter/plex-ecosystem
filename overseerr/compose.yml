@@ -14,6 +14,4 @@ services:
     ports:
       - 5055:5055
     volumes:
-      - overseerr:/app/config
-volumes:
-  overseerr:
+      - ${PLEX_ROOT}/config/overseerr/config:/app/config # Moved outside of docker for portability

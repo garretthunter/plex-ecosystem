@@ -13,10 +13,8 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - prowlarr:/config                      # Using docker volumes as configurations can be restored from backup
+      - ${PLEX_ROOT}/config/prowlarr:/config # Moved outside of docker for portability
       - ${PLEX_ROOT}/backups:/config/Backups  # Saves backups to external filesystem for recovery
     ports:
       - 9696:9696
     restart: unless-stopped   
-volumes:
-  prowlarr:

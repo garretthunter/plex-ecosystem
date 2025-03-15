@@ -12,9 +12,7 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - tautulli:/config
-      - ${PLEX_ROOT}/backups:/config/Backups  # Saves backups to external filesystem for recovery
+      - ${PLEX_ROOT}/config/tautulli:/config # Moved outside of docker for portability
+      - ${PLEX_ROOT}/backups/tautulli:/config/backups  # Saves backups to external filesystem for recovery
     ports:
       - 8181:8181
-volumes:
-  tautulli:
