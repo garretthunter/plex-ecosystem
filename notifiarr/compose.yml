@@ -6,7 +6,7 @@ name: notifiarr
 services:
   notifiarr:
     container_name: notifiarr
-    image: golift/notifiarr
+    image: golift/notifiarr:latest
     hostname: notifiarr-${hostname}
     restart: unless-stopped
     environment:
