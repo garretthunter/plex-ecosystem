@@ -4,13 +4,15 @@
 name: plex-ecosystem
 
 include: 
-#  - plex/compose.yml        # Plex media server (removed as being too slow)
-  - apprise/compose.yml     # Notification automation service
-  - notifiarr/compose.yml   # Server notification service
-  - sabnzbd/compose.yml     # Usenet downloader
-  - qbittorrent/compose.yml # Torrent downloader
-  - prowlarr/compose.yml    # Torrent and Usenet indexer
-  - sonarr/compose.yml      # TV show download automation
-  - radarr/compose.yml      # Movie download automation
-  - overseerr/compose.yml   # Media discovery and request service
-  - tautulli/compose.yml    # Plex usage monitoring
+#  - plex/compose.yml               # Plex media server (removed as being too slow)
+  - nginx-proxy-manager/compose.yml # Proxy server
+  - apprise/compose.yml             # Notification automation service
+  - notifiarr/compose.yml           # Server notification service
+  - sabnzbd/compose.yml             # Usenet downloader
+  - qbittorrent/compose.yml         # Torrent downloader
+  - prowlarr/compose.yml            # Torrent and Usenet indexer
+  - sonarr/compose.yml              # TV show download automation
+  - radarr/compose.yml              # Movie download automation
+  - overseerr/compose.yml           # Media discovery and request service
+  - tautulli/compose.yml            # Plex usage monitoring
+  - watchtower/compose.yml          # Automatic image upgrade

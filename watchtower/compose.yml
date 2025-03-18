@@ -1,3 +1,7 @@
+##
+# Watchtower - Docker image maintainer https://containrrr.dev/watchtower/
+##
+name: watchtower
 services:
   watchtower:
     image: containrrr/watchtower
