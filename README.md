@@ -76,6 +76,9 @@ Plex usage and monitoring service. https://tautulli.com/
 # Reverse Proxy Server
 ## Nginx Proxy Manager
 I put all docker containres behind an Nginx Proxy Manager. I like the image provided here https://nginxproxymanager.com/guide/. It provides seemless Let's Encrypt support and a friendly UI. I spin this up in a separate container group in case I want to use it for other services.
+# Docker Image Maintenance
+## Watchtower
+Watchtower will pull down your new image, gracefully shut down your existing container and restart it with the same options that were used when it was deployed initially. Ref https://github.com/containrrr/watchtower and https://hub.docker.com/r/containrrr/watchtower
 # References
 https://docs.saltbox.dev/saltbox/basics/basics/ (possible solution to unify all applications under SSO)
 https://www.reddit.com/r/homelab/comments/1b3kfcd/media_management_servarr_diagram_plex_prowlarr/ (great diagram)
