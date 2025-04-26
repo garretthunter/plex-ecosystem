@@ -42,6 +42,7 @@ data
     ├── music
     └── tv
 ```
+Additionally, when running on a linux OS I create a **media** group, assign each of the application users to that group, and set the permissions for any directory the application must access to 2770 including the mount directory. If I were running Ubuntu and my USB drive mounted under /media, I would **sudo chmod 2770 /media/data**.
 # Media Server
 ## Plex Media Server
 Media streaming application https://www.plex.tv/. I run my stack on a Windows 11 Pro install and chose to run the native Plex server application. I ran Plex in a docker container and it was wayyyy sloowwwwwww and did not connect directly to plex clients. I've left the docker files in the repo for historical purposes
