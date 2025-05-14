@@ -2,18 +2,20 @@
 # SABnzbd - Usenet download service https://sabnzbd.org/
 # Docker Hub: https://hub.docker.com/r/linuxserver/sabnzbd
 ##  
+name: sabnzbd
 services:
   sabnzbd:
-    image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
+    image: lscr.io/linuxserver/sabnzbd:latest
+    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${PLEX_ROOT}/config/sabnzbd:/config # Moved outside of docker for portability
-      - ${PLEX_ROOT}/backups:/backups # To external filesystem
-      - ${PLEX_MEDIA}/usenet:/data/usenet  # Torrent base directory
+      - ${APP_CONFIG}/sabnzbd:/config     # Moved outside of docker for portability
+      - ${APP_BACKUP}/sabnzbd:/backups    # To external filesystem
+      - ${PLEX_MEDIA}/usenet:/data/usenet # Root NZB directory
     ports:
       - 8080:8080
     restart: unless-stopped

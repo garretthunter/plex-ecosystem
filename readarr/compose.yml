@@ -6,6 +6,7 @@ services:
   readarr:
     container_name: readarr
     image: ghcr.io/hotio/readarr
+    network_mode: 'host' # Use host networking for better performance
     ports:
       - "8787:8787"
     environment:
@@ -14,8 +15,6 @@ services:
       - UMASK=002
       - TZ=America/Los_Angeles
     volumes:
-#      - /<host_folder_config>:/config
-#      - /<host_folder_data>:/data
-      - ${PLEX_ROOT}/config/readarr:/config   # Moved outside of docker for portability
-      - ${PLEX_ROOT}/backups:/config/Backups  # Saves backups to external filesystem for recovery
+      - ${APP_CONFIG}/readarr:/config         # Moved outside of docker for portability
+      - ${APP_BACKUP}/readarr:/config/Backups # Saves backups to external filesystem for recovery
       - ${PLEX_MEDIA}:/data                   # Media root

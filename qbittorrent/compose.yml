@@ -2,21 +2,23 @@
 # qBittorrent - Torrent download service https://www.qbittorrent.org/
 # Docker Hub: https://hub.docker.com/r/linuxserver/qbittorrent
 ##  
+name: qbittorrent
 services:
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
+    image: lscr.io/linuxserver/qbittorrent:latest
+    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
-      - WEBUI_PORT=8081 # Changed from the default 8080 to not conflict with sabnzbd
+      - WEBUI_PORT=8282 # Changed from the default 8080 to not conflict with sabnzbd
       - TORRENTING_PORT=6881
     volumes:
-      - ${PLEX_ROOT}/config:/config # Moved outside of docker for portability
-      - ${PLEX_MEDIA}/torrents:/data/torrents   # Torrent base directory
+      - ${APP_CONFIG}:/config                 # Moved outside of docker for portability
+      - ${PLEX_MEDIA}/torrents:/data/torrents # Torrent base directory
     ports:
-      - 8081:8081 # Changed from the default 8080 to not conflict with sabnzbd
+      - 8282:8282 # Changed from the default 8080 to not conflict with sabnzbd
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped

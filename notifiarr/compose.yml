@@ -7,14 +7,15 @@ services:
   notifiarr:
     container_name: notifiarr
     image: golift/notifiarr:latest
-    hostname: notifiarr-${hostname}
+    network_mode: 'host' # Use host networking for better performance
+    hostname: notifiarr-${HOSTNAME}
     restart: unless-stopped 
     environment:
       - LOG_LEVEL=debug
       - TZ=America/Los_Angeles
       - DN_API_KEY=3ef0d9c1-4fc0-4e89-994b-c23abc303419
     volumes:
-      - ${PLEX_ROOT}/config/notifiarr:/config # Moved outside of docker for portability
+      - ${APP_CONFIG}/notifiarr:/config # Moved outside of docker for portability
       - /var/run/utmp:/var/run/utmp
       - /etc/machine-id:/etc/machine-id
     ports:

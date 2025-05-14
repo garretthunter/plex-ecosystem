@@ -2,17 +2,19 @@
 # Tautulli - Plex usage monitoring service https://tautulli.com/
 # Docker Hub: https://hub.docker.com/r/linuxserver/tautulli
 ##
+name: tautulli
 services:
   tautulli:
     container_name: tautulli
     image: lscr.io/linuxserver/tautulli:latest
+    network_mode: 'host' # Use host networking for better performance
     restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${PLEX_ROOT}/config/tautulli:/config # Moved outside of docker for portability
-      - ${PLEX_ROOT}/backups/tautulli:/config/backups  # Saves backups to external filesystem for recovery
+      - ${APP_CONFIG}/tautulli:/config         # Moved outside of docker for portability
+      - ${APP_BACKUP}/tautulli:/config/backups # Saves backups to external filesystem for recovery
     ports:
       - 8181:8181
