@@ -7,6 +7,7 @@ services:
   overseerr:
     container_name: overseerr
     image: sctx/overseerr:latest
+    network_mode: 'host' # Use host networking for better performance
     restart: unless-stopped
     environment:
       - LOG_LEVEL=debug
@@ -14,4 +15,5 @@ services:
     ports:
       - 5055:5055
     volumes:
-      - ${PLEX_ROOT}/config/overseerr/config:/app/config # Moved outside of docker for portability
+      - ${APP_CONFIG}/overseerr:/app/config # Moved outside of docker for portability
+

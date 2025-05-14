@@ -4,17 +4,19 @@
 #
 # Note: Restore from backup after recreating the container
 ##  
+name: prowlarr
 services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
+    network_mode: "host" # Use host networking for better performance
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${PLEX_ROOT}/config/prowlarr:/config # Moved outside of docker for portability
-      - ${PLEX_ROOT}/backups:/config/Backups  # Saves backups to external filesystem for recovery
+      - ${APP_CONFIG}/prowlarr:/config         # Moved outside of docker for portability
+      - ${APP_BACKUP}/prowlarr:/config/Backups # Saves backups to external filesystem for recovery
     ports:
       - 9696:9696
     restart: unless-stopped   

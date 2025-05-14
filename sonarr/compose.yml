@@ -3,18 +3,20 @@
 # Docker Hub: https://hub.docker.com/r/linuxserver/sonarr
 # Wiki: https://wiki.servarr.com/
 ##  
+name: sonarr
 services:
   sonarr:
-    image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    image: lscr.io/linuxserver/sonarr:latest
+    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${PLEX_ROOT}/config/sonarr:/config # Moved outside of docker for portability
-      - ${PLEX_ROOT}/backups:/config/Backups  # Saves backups to external filesystem for recovery
-      - ${PLEX_MEDIA}:/data                   # Media root
+      - ${APP_CONFIG}/sonarr:/config         # Moved outside of docker for portability
+      - ${APP_BACKUP}/sonarr:/config/Backups # Saves backups to external filesystem for recovery
+      - ${PLEX_MEDIA}:/data                  # Common root directory for plex, qBittorrent, sabnzbd, radarr, and sonarr
     ports:
       - 8989:8989
     restart: unless-stopped

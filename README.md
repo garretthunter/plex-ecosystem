@@ -4,9 +4,10 @@ Services that grab, sort, organize, and monitor your Music, Movie, E-Book, or TV
 Container folders need to be defined for this build to work as designed.
 
 In the **.env** file, configure the following variables:
-* **PLEX_ROOT** - This is the host mount point used for all container mount points
-* **SERVARR_BACKUP** - External to the containers, this directory stores backups for Sonarr, Radarr, Prowlarr, and Tautulli. If a container is destroyed the data and configurations can be restored from one of these backups
-* **PLEX_MEDIA** - Root directory for all plex media
+* **HOST_MOUNT** - This is the host mount point used for all container mount points
+* **APP_CONFIG** - External to the containers, this directory stores config files for all apps. If a container is destroyed the 
+* **APP_BACKUP** - External to the containers, this directory stores backups for apps. If a container is destroyed the data and configurations can be restored from one of these backups
+* **PLEX_MEDIA** - Root directory for all plex media, torrents, and nzb files
 * **PLEX_TRANSCODE_TEMP** - Used by Plex to transcode media on the fly
 ## Folder Structure
 Containers expect the following top level directory structure created in the host filesystem. I keep these files outside the container so they persist regardless of the containers' lifecycle.
@@ -18,8 +19,10 @@ Containers expect the following top level directory structure created in the hos
 ├──backups
 ├──data
 ├──config
-   ├── plex
+   ├── sonarr
+   ├── radarr
    ├── qbitorrent
+   ├── ...
 ```
 I follow TRaSH Guides for the media folder structure as described here https://trash-guides.info/File-and-Folder-Structure/How-to-set-up/Docker/
 ```
@@ -41,12 +44,6 @@ data
     ├── movies
     ├── music
     └── tv
-```
-Additionally, when running on a linux OS I create a **media** group, assign each of the application users to that group, and set the permissions for any directory the application must access to 2770 including the mount directory. If I were running Ubuntu and my USB drive mounted under /media, I would:
-```
-$ sudo chgrp media /media
-$ sudo chgrp -R media /media/data
-$ sudo chmod -R 2770 /media/data
 ```
 # Media Server
 ## Plex Media Server
