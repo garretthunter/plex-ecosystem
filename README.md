@@ -15,7 +15,7 @@ Containers expect the following top level directory structure created in the hos
 * config - Persist configuration data across container lifecycle for services that do not provide automated backups
 * data - Common root directory enabling media file sharing across containers
 ```
-<host_path_to_data>
+<host_mount_path>
 ├──backups
 ├──data
 ├──config
