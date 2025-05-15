@@ -3,10 +3,12 @@
 # Docker Hub: https://hub.docker.com/r/caronc/apprise
 # Apprise URL format: apprise://host.docker.internal:8000/token?tags=<tag> | https://github.com/caronc/apprise/wiki/CLI_Usage
 ##  
+name: 'apprise'
 services:
   apprise:
     container_name: 'apprise'
     image: 'caronc/apprise:latest'
+    network_mode: 'host' # Use host networking for better performance
     restart: unless-stopped  
     ports:
       - '8000:8000'
