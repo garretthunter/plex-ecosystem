@@ -7,14 +7,16 @@ name: 'apprise'
 services:
   apprise:
     container_name: 'apprise'
-    image: 'caronc/apprise:latest'
+    image: 'lscr.io/linuxserver/apprise-api:latest' # Use LinuxServer.io's version for better support
     network_mode: 'host' # Use host networking for better performance
-    restart: unless-stopped  
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${APP_CONFIG}/apprise:/config # Moved outside of docker for portability
+      - ${APP_CONFIG}/apprise:/plugin # Moved outside of docker for portability
+      - ${APP_CONFIG}/apprise:/attach # Moved outside of docker for portability
     ports:
       - '8000:8000'
-    volumes:
-      - apprise:/config
-      - apprise:/plugin
-      - apprise:/attach
-volumes:
-  apprise:
+    restart: unless-stopped
