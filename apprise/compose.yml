@@ -18,5 +18,5 @@ services:
       - ${APP_CONFIG}/apprise:/plugin # Moved outside of docker for portability
       - ${APP_CONFIG}/apprise:/attach # Moved outside of docker for portability
     ports:
-      - '8000:8000'
+      - 8000:8000
     restart: unless-stopped
