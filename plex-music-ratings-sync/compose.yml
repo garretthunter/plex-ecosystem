@@ -1,0 +1,22 @@
+services:
+  plex-music-ratings-sync:
+    image: ghcr.io/rfgamaral/plex-music-ratings-sync
+    container_name: plex-music-ratings-sync
+    network_mode: bridge
+    command: sync
+    restart: on-failure:2
+    volumes:
+      - ${APP_CONFIG}/plex-music-ratings-sync:/app/data       # Moved outside of docker for portability
+      - ${PLEX_MEDIA}/media/music:/plex/music # Common root directory for plex, qBittorrent, sabnzbd, radarr, and sonarr
+#      - /host/app/data:/app/data
+#      - /host/plex/music:/plex/music
+  ofelia-scheduler:
+    image: mcuadros/ofelia
+    container_name: ofelia-scheduler
+    command: daemon --docker
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      ofelia.job-run.plex-music-ratings-sync.schedule: '@every 1d'
+      ofelia.job-run.plex-music-ratings-sync.container: 'plex-music-ratings-sync'
