@@ -2,11 +2,12 @@
 # Tautulli - Plex usage monitoring service https://tautulli.com/
 # Docker Hub: https://hub.docker.com/r/linuxserver/tautulli
 ##
-name: tautulli
 services:
   tautulli:
     container_name: tautulli
     image: lscr.io/linuxserver/tautulli:latest
+    depends_on: 
+      - nginx-proxy-manager
     network_mode: 'host' # Use host networking for better performance
     restart: unless-stopped
     environment:

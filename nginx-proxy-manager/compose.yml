@@ -4,7 +4,7 @@
 name: nginx-proxy-manager
 services:
   nginx-proxy-manager:
-    container_name: 'proxy'
+    container_name: 'nginx-proxy-manager'
     image: 'jc21/nginx-proxy-manager:latest'
     network_mode: 'host' # Use host networking for better performance
     restart: unless-stopped  

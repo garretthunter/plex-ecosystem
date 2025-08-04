@@ -3,11 +3,14 @@
 # Docker Hub: https://hub.docker.com/r/linuxserver/radarr
 # Wiki: https://wiki.servarr.com/
 ##
-name: radarr
 services:
   radarr:
     container_name: radarr
     image: lscr.io/linuxserver/radarr:latest
+    depends_on: 
+      - nginx-proxy-manager
+      - qbittorrent
+      - sabnzbd
     network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000

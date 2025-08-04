@@ -4,11 +4,12 @@
 #
 # Note: Restore from backup after recreating the container
 ##  
-name: prowlarr
 services:
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
+    depends_on: 
+      - nginx-proxy-manager
     network_mode: "host" # Use host networking for better performance
     environment:
       - PUID=1000

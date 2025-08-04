@@ -2,11 +2,12 @@
 # Notifiarr - Client of Notifiarr.com notification service https://notifiarr.com/
 # Docker Hub: https://hub.docker.com/r/golift/notifiarr
 ##  
-name: notifiarr
 services:
   notifiarr:
     container_name: notifiarr
     image: golift/notifiarr:latest
+    depends_on: 
+      - nginx-proxy-manager
     network_mode: 'host' # Use host networking for better performance
     hostname: notifiarr-${HOSTNAME}
     restart: unless-stopped 

@@ -1,19 +1,19 @@
 ##
-# All services used 
+# My Plex services stack 
 ##
-name: plex-ecosystem
 
 include: 
-#  - plex/compose.yml               # Plex media server (removed as being too slow)
   - nginx-proxy-manager/compose.yml # Proxy server
-  - apprise/compose.yml             # Notification automation service
-  - notifiarr/compose.yml           # Server notification service
   - sabnzbd/compose.yml             # Usenet downloader
   - qbittorrent/compose.yml         # Torrent downloader
-#  - prowlarr/compose.yml            # Torrent and Usenet indexer (offloaded to raspberry pi server)
+  - apprise/compose.yml             # Notification automation service
+  - notifiarr/compose.yml           # Server notification service
   - sonarr/compose.yml              # TV show download automation
   - radarr/compose.yml              # Movie download automation
-#  - readarr/compose.yml             # Book download automation (removed as not used)
   - overseerr/compose.yml           # Media discovery and request service
-#  - tautulli/compose.yml            # Plex usage monitoring (offloaded to raspberry pi server))
+#  - plex-music-ratings-sync/compose.yml # Sync ratings between plex and file metadata
+#  - plex/compose.yml               # Plex media server (removed as being too slow)
 #  - watchtower/compose.yml          # Automatic image upgrade (deprecated)
+# Offloaded to Raspberry Pi server
+#  - tautulli/compose.yml            # Plex usage monitoring
+#  - prowlarr/compose.yml            # Torrent and Usenet indexer

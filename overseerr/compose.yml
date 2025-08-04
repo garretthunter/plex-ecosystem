@@ -2,11 +2,14 @@
 # Overseerr - Media discovery and request management service https://overseerr.dev/
 # Install: https://docs.overseerr.dev/getting-started/installation
 ##  
-name: overseerr
 services:
   overseerr:
     container_name: overseerr
     image: sctx/overseerr:latest
+    depends_on: 
+      - nginx-proxy-manager
+      - radarr
+      - sonarr
     network_mode: 'host' # Use host networking for better performance
     restart: unless-stopped
     environment:

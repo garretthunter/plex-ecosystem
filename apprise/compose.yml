@@ -3,11 +3,12 @@
 # Docker Hub: https://hub.docker.com/r/caronc/apprise
 # Apprise URL format: apprise://host.docker.internal:8000/token?tags=<tag> | https://github.com/caronc/apprise/wiki/CLI_Usage
 ##  
-name: 'apprise'
 services:
   apprise:
     container_name: 'apprise'
     image: 'lscr.io/linuxserver/apprise-api:latest' # Use LinuxServer.io's version for better support
+    depends_on: 
+      - nginx-proxy-manager
     network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
