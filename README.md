@@ -47,7 +47,7 @@ data
 ```
 # Media Server
 ## Plex Media Server
-Media streaming application https://www.plex.tv/. I run my stack on a Windows 11 Pro install and chose to run the native Plex server application. I ran Plex in a docker container and it was wayyyy sloowwwwwww and did not connect directly to plex clients. I've left the docker files in the repo for historical purposes
+Media streaming application https://www.plex.tv/. I run my stack on a Lenovo X1 Carbon Gen 5 with 16 GB memory and Unbuntu Desktop. I found this out performed the same hardware running Windows 10. It's video processing is not so great so I often have to downres my video to 720p. Plex in Docker under Windows was so slow it hung the laptop. Ubuntu has been smooth with memory usage pegging at most 6 GB.
 ### Audiobook Configuration
 I used [Prologue](https://prologue.audio/) (iPhone only, booo) for my audiobooks. I wanted to serve audiobooks directly through Plex so I started with [Plex Audiobook Guide](https://github.com/seanap/Plex-Audiobook-Guide) which lead me to installing the agent [Audnexus.bundle](https://github.com/djdembeck/Audnexus.bundle) so that I can serve audiobooks through Plex 
 # Media Request Management
