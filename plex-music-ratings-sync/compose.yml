@@ -2,7 +2,7 @@ services:
   plex-music-ratings-sync:
     image: ghcr.io/rfgamaral/plex-music-ratings-sync
     container_name: plex-music-ratings-sync
-    network_mode: bridge
+    network_mode: host
     command: sync
     restart: on-failure:2
     volumes:
@@ -13,6 +13,7 @@ services:
   ofelia-scheduler:
     image: mcuadros/ofelia
     container_name: ofelia-scheduler
+    network_mode: host
     command: daemon --docker
     restart: unless-stopped
     volumes:

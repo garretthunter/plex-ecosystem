@@ -4,12 +4,16 @@
 ##
 services:
   plex:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile
     container_name: plex
+    network_mode: host
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PLEX_UID=1000
+      - PLEX_GID=1000
       - TZ=America/Los_Angeles
+      - CHANGE_CONFIG_DIR_OWNERSHIP=true
     volumes:
       - ${APP_CONFIG}/plex:/config        # Moved outside of docker for portability
       - ${PLEX_MEDIA}:/data               # Media root
@@ -25,5 +29,7 @@ services:
       - 32413:32413/udp
       - 32414:32414/udp
     restart: unless-stopped
-volumes:
-  plex:
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+#volumes:
+#  plex:

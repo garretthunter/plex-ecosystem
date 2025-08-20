@@ -12,8 +12,9 @@ include:
   - radarr/compose.yml              # Movie download automation
   - overseerr/compose.yml           # Media discovery and request service
   - watchtower/compose.yml          # Automatic image upgrade (deprecated)
+  - plex/compose.yml               # Plex media server (removed as being too slow)
+# Not working as expected
 #  - plex-music-ratings-sync/compose.yml # Sync ratings between plex and file metadata
-#  - plex/compose.yml               # Plex media server (removed as being too slow)
 # Offloaded to Raspberry Pi server
 #  - tautulli/compose.yml            # Plex usage monitoring
 #  - prowlarr/compose.yml            # Torrent and Usenet indexer
