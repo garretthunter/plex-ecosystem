@@ -5,7 +5,8 @@
 services:
   overseerr:
     container_name: overseerr
-    image: sctx/overseerr:latest
+#    image: sctx/overseerr:latest
+    image: sctx/overseerr:develop
     depends_on: 
       - nginx-proxy-manager
       - radarr
