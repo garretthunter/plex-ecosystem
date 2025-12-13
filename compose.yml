@@ -3,27 +3,22 @@
 ##
 
 include: 
-#  - nginx-proxy-manager/compose.yml # Proxy server
   - nginx-proxy-manager.yml # Proxy server
-#  - sabnzbd/compose.yml             # Usenet downloader
   - sabnzbd.yml             # Usenet downloader
-#  - qbittorrent/compose.yml         # Torrent downloader
   - qbittorrent.yml         # Torrent downloader
-#  - apprise/compose.yml             # Notification automation service
   - apprise.yml             # Notification automation service
-#  - notifiarr/compose.yml           # Server notification service
   - notifiarr.yml           # Server notification service
-#  - sonarr/compose.yml              # TV show download automation
   - sonarr.yml              # TV show download automation
-  - radarr/compose.yml              # Movie download automation
-  - overseerr/compose.yml           # Media discovery and request service
-  - watchtower/compose.yml          # Automatic image upgrade 
+  - radarr.yml              # Movie download automation
+  - overseerr.yml           # Media discovery and request service
+  - atlas.yml               # Network infrastructure visualizer
+
   - plex/compose.yml                # Plex media server 
-  - atlas/compose.yml               # Network infrastructure visualizer
+
 # Not working as expected
 #  - plex-music-ratings-sync/compose.yml # Sync ratings between plex and file metadata
 # Offloaded to Raspberry Pi server
-#  - tautulli/compose.yml            # Plex usage monitoring
-#  - prowlarr/compose.yml            # Torrent and Usenet indexer
+#  - tautulli.yml            # Plex usage monitoring
+#  - prowlarr.yml            # Torrent and Usenet indexer
 # It did not work as expected and I was too lazy to figure it out. Am updating manually
-#  - watchtower/compose.yml          # Automatic image upgrade 
+#  - watchtower.yml          # Automatic image upgrade 
