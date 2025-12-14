@@ -15,6 +15,10 @@ include:
 
   - plex/compose.yml                # Plex media server 
 
+# Optional services
+  - portainer.yml           # Docker management UI
+
+# Disabled services
 # Not working as expected
 #  - plex-music-ratings-sync/compose.yml # Sync ratings between plex and file metadata
 # Offloaded to Raspberry Pi server

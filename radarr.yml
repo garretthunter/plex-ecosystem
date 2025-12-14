@@ -11,7 +11,7 @@ services:
       - nginx-proxy-manager
       - qbittorrent
       - sabnzbd
-    network_mode: 'host' # Use host networking for better performance
+#    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
       - PGID=1000

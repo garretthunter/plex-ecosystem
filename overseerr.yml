@@ -11,7 +11,7 @@ services:
       - nginx-proxy-manager
       - radarr
       - sonarr
-    network_mode: 'host' # Use host networking for better performance
+#    network_mode: 'host' # Use host networking for better performance
     restart: unless-stopped
     environment:
       - LOG_LEVEL=debug

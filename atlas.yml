@@ -11,10 +11,10 @@ services:
     cap_add:
       - NET_RAW
       - NET_ADMIN
-#    environment:
-#      - PUID=1000
-#      - PGID=1000
-#      - TZ=America/Los_Angeles
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
 #      - ATLAS_UI_PORT=8884
 #      - ATLAS_API_PORT=8885
     volumes:
