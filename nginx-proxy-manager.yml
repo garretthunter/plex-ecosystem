@@ -6,7 +6,7 @@ services:
   nginx-proxy-manager:
     container_name: 'nginx-proxy-manager'
     image: 'jc21/nginx-proxy-manager:latest'
-    network_mode: 'host' # Use host networking for better performance
+#    network_mode: 'host' # Use host networking for better performance
     restart: unless-stopped  
     ports:
       - '80:80'
@@ -15,3 +15,9 @@ services:
     volumes:
       - ${APP_CONFIG}/nginx-proxy-manager/data:/data                       # Moved outside of docker for portability
       - ${APP_CONFIG}/nginx-proxy-manager/etc/letsencrypt:/etc/letsencrypt # Moved outside of docker for portability
+    networks:
+      - proxied
+
+networks:
+  proxied:
+    external: true

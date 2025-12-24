@@ -9,7 +9,7 @@ services:
     image: 'lscr.io/linuxserver/apprise-api:latest' # Use LinuxServer.io's version for better support
     depends_on: 
       - nginx-proxy-manager
-    network_mode: 'host' # Use host networking for better performance
+#    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
       - PGID=1000
@@ -21,3 +21,9 @@ services:
     ports:
       - 8000:8000
     restart: unless-stopped
+#    networks:
+#      - proxied
+
+#networks:
+#  proxied:
+#    external: true

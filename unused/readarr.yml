@@ -6,7 +6,7 @@ services:
   readarr:
     container_name: readarr
     image: ghcr.io/hotio/readarr
-    network_mode: 'host' # Use host networking for better performance
+#    network_mode: 'host' # Use host networking for better performance
     ports:
       - "8787:8787"
     environment:

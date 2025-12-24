@@ -2,7 +2,6 @@ services:
   plex-music-ratings-sync:
     image: ghcr.io/rfgamaral/plex-music-ratings-sync
     container_name: plex-music-ratings-sync
-    network_mode: host
     command: sync
     restart: on-failure:2
     volumes:
