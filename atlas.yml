@@ -1,7 +1,6 @@
 ##
-# Atlas UI - Movie search and retrieval service https://radarr.video/
-# Docker Hub: https://hub.docker.com/r/linuxserver/radarr
-# Wiki: https://wiki.servarr.com/
+# Atlas UI - Scans, analyzes, and visualizes network infrastructure
+# Gihub: https://github.com/karam-ajaj/atlas
 ##
 services:
   atlas:

@@ -1,3 +1,7 @@
+##
+# Portainer - Docker management UI
+# Install: https://docs.portainer.io/start/install/server/docker
+##  
 services:
   portainer:
     image: portainer/portainer-ce:latest
