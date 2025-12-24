@@ -21,3 +21,9 @@ services:
     ports:
       - 8000:8000
     restart: unless-stopped
+#    networks:
+#      - proxied
+
+#networks:
+#  proxied:
+#    external: true

@@ -20,3 +20,9 @@ services:
     ports:
       - 8080:8080
     restart: unless-stopped
+    networks:
+      - proxied
+
+networks:
+  proxied:
+    external: true
