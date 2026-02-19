@@ -8,7 +8,7 @@ services:
       context: .
       dockerfile: dockerfile
     container_name: plex
-#    network_mode: host
+    network_mode: host
     environment:
       - PLEX_UID=1000
       - PLEX_GID=1000

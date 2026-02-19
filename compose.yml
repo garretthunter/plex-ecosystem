@@ -10,7 +10,7 @@ include:
   - notifiarr.yml           # Server notification service
   - sonarr.yml              # TV show download automation
   - radarr.yml              # Movie download automation
-  - overseerr.yml           # Media discovery and request service
+  - seerr.yml               # Media discovery and request service
   - atlas.yml               # Network infrastructure visualizer
 
   - plex/compose.yml                # Plex media server 
