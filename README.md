@@ -51,8 +51,8 @@ Media streaming application https://www.plex.tv/. I run my stack on a Lenovo X1 
 ### Audiobook Configuration
 I used [Prologue](https://prologue.audio/) (iPhone only, booo) for my audiobooks. I wanted to serve audiobooks directly through Plex so I started with [Plex Audiobook Guide](https://github.com/seanap/Plex-Audiobook-Guide) which lead me to installing the agent [Audnexus.bundle](https://github.com/djdembeck/Audnexus.bundle) so that I can serve audiobooks through Plex 
 # Media Request Management
-## Overseer
-Plex media discovery and request management service. https://overseerr.dev/
+## Seerr
+Plex media discovery and request management service. https://seerr.dev/
 # Servarr Applications
 These **Index** (find where media is hosted), **Request** (send request to download client), and **Monitor** (search for new versions and media not yet released)
 ## Prowlarr
