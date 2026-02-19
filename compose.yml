@@ -13,7 +13,7 @@ include:
   - seerr.yml               # Media discovery and request service
   - atlas.yml               # Network infrastructure visualizer
 
-  - plex/compose.yml                # Plex media server 
+  - plex/compose.yml        # Plex media server 
 
 # Optional services
   - portainer.yml           # Docker management UI
@@ -24,5 +24,3 @@ include:
 # Offloaded to Raspberry Pi server
 #  - tautulli.yml            # Plex usage monitoring
 #  - prowlarr.yml            # Torrent and Usenet indexer
-# It did not work as expected and I was too lazy to figure it out. Am updating manually
-#  - watchtower.yml          # Automatic image upgrade 
