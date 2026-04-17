@@ -11,12 +11,11 @@ include:
   - sonarr.yml              # TV show download automation
   - radarr.yml              # Movie download automation
   - seerr.yml               # Media discovery and request service
-  - atlas.yml               # Network infrastructure visualizer
-
   - plex/compose.yml        # Plex media server 
 
 # Optional services
-  - portainer.yml           # Docker management UI
+#  - atlas.yml               # Network infrastructure visualizer
+#  - portainer.yml           # Docker management UI
 
 # Disabled services
 # Not working as expected
