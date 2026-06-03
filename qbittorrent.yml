@@ -24,11 +24,9 @@ services:
       - 6881:6881/udp
     restart: unless-stopped
     networks:
-      - proxied
       - media
 
 networks:
-  proxied:
-    external: true
+
   media:
-    external: true
+

@@ -22,11 +22,8 @@ services:
       - 8000:8000
     restart: unless-stopped
     networks:
-      - proxied
       - media
 
 networks:
-  proxied:
-    external: true
+
   media:
-    external: true

@@ -14,7 +14,7 @@ include:
   - plex/compose.yml        # Plex media server 
 
 # Optional services
-#  - atlas.yml               # Network infrastructure visualizer
+  - atlas.yml               # Network infrastructure visualizer
 #  - portainer.yml           # Docker management UI
 
 # Disabled services

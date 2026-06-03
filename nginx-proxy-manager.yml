@@ -16,11 +16,9 @@ services:
       - ${HOST_MOUNT}/config/nginx-proxy-manager/data:/data
       - ${HOST_MOUNT}/config/nginx-proxy-manager/etc/letsencrypt:/etc/letsencrypt
     networks:
-      - proxied
       - media
 
 networks:
   proxied:
-    external: true
+
   media:
-    external: true

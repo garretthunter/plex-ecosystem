@@ -21,11 +21,8 @@ services:
       - 8080:8080
     restart: unless-stopped
     networks:
-      - proxied
       - media
 
 networks:
-  proxied:
-    external: true
+
   media:
-    external: true

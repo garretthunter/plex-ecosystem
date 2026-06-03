@@ -25,12 +25,10 @@ services:
     volumes:
       - ${HOST_MOUNT}/config/seerr:/app/config
     networks:
-      - proxied
       - media
 
 networks:
-  proxied:
-    external: true
+
   media:
-    external: true
+
 

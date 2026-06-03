@@ -25,11 +25,9 @@ services:
       - 7878:7878
     restart: unless-stopped
     networks:
-      - proxied
       - media
 
 networks:
-  proxied:
-    external: true
+
   media:
-    external: true
+

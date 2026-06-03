@@ -21,11 +21,9 @@ services:
     ports:
       - 5454:5454
     networks:
-      - proxied
       - media
 
 networks:
-  proxied:
-    external: true
+
   media:
-    external: true
+
