@@ -1,0 +1,18 @@
+##
+# Profilarr - Used to manages quality profiles and custom formats for Radarr and Sonarr
+# Docs: https://dictionarry.dev/profilarr-setup/installation
+##
+
+services:
+  profilarr:
+    image: santiagosayshey/profilarr:latest # or :beta
+    container_name: profilarr
+    ports:
+      - "6868:6868"
+    volumes:
+      - ${APP_CONFIG}/profilarr:/config # Moved outside of docker for portability
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    restart: unless-stopped

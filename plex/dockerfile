@@ -1,13 +1,9 @@
 FROM plexinc/pms-docker:latest
 
-# Update package list and install Git
 RUN apt-get update && \
     apt-get install -y git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Audnexus plugin
-RUN git config --global --add safe.directory "/config/Library/Application Support/Plex Media Server/Plug-ins/Audnexus.bundle" && \
-    mkdir -p "/config/Library/Application Support/Plex Media Server/Plug-ins/Audnexus.bundle" && \
-    git clone https://github.com/djdembeck/Audnexus.bundle.git "/config/Library/Application Support/Plex Media Server/Plug-ins/Audnexus.bundle"
-
+COPY audnexus-init.sh /etc/cont-init.d/99-audnexus
+RUN chmod +x /etc/cont-init.d/99-audnexus

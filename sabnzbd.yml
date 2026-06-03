@@ -14,15 +14,15 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${APP_CONFIG}/sabnzbd:/config     # Moved outside of docker for portability
-      - ${APP_BACKUP}/sabnzbd:/backups    # To external filesystem
-      - ${PLEX_MEDIA}/usenet:/data/usenet # Root NZB directory
+      - ${HOST_MOUNT}/config/sabnzbd:/config
+      - ${HOST_MOUNT}/backups/sabnzbd:/backups
+      - ${HOST_MOUNT}/data/usenet:/data/usenet
     ports:
       - 8080:8080
     restart: unless-stopped
     networks:
-      - proxied
+      - media
 
 networks:
-  proxied:
-    external: true
+
+  media:

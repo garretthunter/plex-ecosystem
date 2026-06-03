@@ -12,12 +12,18 @@ services:
     hostname: notifiarr-${HOSTNAME}
     restart: unless-stopped 
     environment:
-      - LOG_LEVEL=debug
       - TZ=America/Los_Angeles
-      - DN_API_KEY=3ef0d9c1-4fc0-4e89-994b-c23abc303419
+      - DN_API_KEY=${NOTIFIARR_API_KEY}
     volumes:
-      - ${APP_CONFIG}/notifiarr:/config # Moved outside of docker for portability
+      - ${HOST_MOUNT}/config/notifiarr:/config
       - /var/run/utmp:/var/run/utmp
       - /etc/machine-id:/etc/machine-id
     ports:
-      - 5454:5454      
+      - 5454:5454
+    networks:
+      - media
+
+networks:
+
+  media:
+

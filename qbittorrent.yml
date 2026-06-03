@@ -16,10 +16,17 @@ services:
       - WEBUI_PORT=8282 # Changed from the default 8080 to not conflict with sabnzbd
       - TORRENTING_PORT=6881
     volumes:
-      - ${APP_CONFIG}:/config                 # Moved outside of docker for portability
-      - ${PLEX_MEDIA}/torrents:/data/torrents # Torrent base directory
+      - ${HOST_MOUNT}/config/qbittorrent:/config
+      - ${HOST_MOUNT}/data/torrents:/data/torrents
     ports:
       - 8282:8282 # Changed from the default 8080 to not conflict with sabnzbd
       - 6881:6881
       - 6881:6881/udp
     restart: unless-stopped
+    networks:
+      - media
+
+networks:
+
+  media:
+

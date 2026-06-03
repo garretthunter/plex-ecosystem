@@ -13,11 +13,12 @@ services:
       - '81:81'
       - '443:443'
     volumes:
-      - ${APP_CONFIG}/nginx-proxy-manager/data:/data                       # Moved outside of docker for portability
-      - ${APP_CONFIG}/nginx-proxy-manager/etc/letsencrypt:/etc/letsencrypt # Moved outside of docker for portability
+      - ${HOST_MOUNT}/config/nginx-proxy-manager/data:/data
+      - ${HOST_MOUNT}/config/nginx-proxy-manager/etc/letsencrypt:/etc/letsencrypt
     networks:
-      - proxied
+      - media
 
 networks:
   proxied:
-    external: true
+
+  media:

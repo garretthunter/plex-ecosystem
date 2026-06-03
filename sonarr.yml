@@ -11,15 +11,23 @@ services:
       - nginx-proxy-manager
       - sabnzbd
       - qbittorrent
+#      - profilarr
 #    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${APP_CONFIG}/sonarr:/config         # Moved outside of docker for portability
-      - ${APP_BACKUP}/sonarr:/config/Backups # Saves backups to external filesystem for recovery
-      - ${PLEX_MEDIA}:/data                  # Common root directory for plex, qBittorrent, sabnzbd, radarr, and sonarr
+      - ${HOST_MOUNT}/config/sonarr:/config
+      - ${HOST_MOUNT}/backups/sonarr:/config/Backups
+      - ${HOST_MOUNT}/data:/data
     ports:
       - 8989:8989
     restart: unless-stopped
+    networks:
+      - media
+
+networks:
+
+  media:
+
