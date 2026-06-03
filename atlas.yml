@@ -15,6 +15,12 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=America/Los_Angeles
+      - ATLAS_UI_PORT=8888
+      - ATLAS_API_PORT=8889
+      - FASTSCAN_INTERVAL=60
+      - DOCKERSCAN_INTERVAL=60
+      - DEEPSCAN_INTERVAL=300
+      - SUBNETS=192.168.86.0/24,172.18.0.0/16
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
