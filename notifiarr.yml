@@ -15,7 +15,7 @@ services:
       - TZ=America/Los_Angeles
       - DN_API_KEY=${NOTIFIARR_API_KEY}
     volumes:
-      - ${APP_CONFIG}/notifiarr:/config # Moved outside of docker for portability
+      - ${HOST_MOUNT}/config/notifiarr:/config
       - /var/run/utmp:/var/run/utmp
       - /etc/machine-id:/etc/machine-id
     ports:

@@ -18,9 +18,9 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${APP_CONFIG}/radarr:/config         # Moved outside of docker for portability
-      - ${APP_BACKUP}/radarr:/config/Backups # Saves backups to external filesystem for recovery
-      - ${PLEX_MEDIA}:/data                  # Common root directory for plex, qBittorrent, sabnzbd, radarr, and sonarr
+      - ${HOST_MOUNT}/config/radarr:/config
+      - ${HOST_MOUNT}/backups/radarr:/config/Backups
+      - ${HOST_MOUNT}/data:/data
     ports:
       - 7878:7878
     restart: unless-stopped

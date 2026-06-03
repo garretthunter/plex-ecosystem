@@ -15,9 +15,9 @@ services:
       - PGID=1000
       - TZ=America/Los_Angeles
     volumes:
-      - ${APP_CONFIG}/apprise/config:/config   # Moved outside of docker for portability
-      - ${APP_CONFIG}/apprise/plugins:/plugin  # Moved outside of docker for portability
-      - ${APP_CONFIG}/apprise/attach:/attach   # Moved outside of docker for portability
+      - ${HOST_MOUNT}/config/apprise/config:/config
+      - ${HOST_MOUNT}/config/apprise/plugins:/plugin
+      - ${HOST_MOUNT}/config/apprise/attach:/attach
     ports:
       - 8000:8000
     restart: unless-stopped
