@@ -13,7 +13,6 @@ services:
       - sonarr
     restart: unless-stopped
     environment:
-      - LOG_LEVEL=debug
       - TZ=America/Los_Angeles
     ports:
       - 5055:5055

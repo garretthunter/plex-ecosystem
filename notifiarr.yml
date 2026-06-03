@@ -12,7 +12,6 @@ services:
     hostname: notifiarr-${HOSTNAME}
     restart: unless-stopped 
     environment:
-      - LOG_LEVEL=debug
       - TZ=America/Los_Angeles
       - DN_API_KEY=${NOTIFIARR_API_KEY}
     volumes:
