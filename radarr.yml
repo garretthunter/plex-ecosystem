@@ -11,6 +11,7 @@ services:
       - nginx-proxy-manager
       - qbittorrent
       - sabnzbd
+#      - profilarr
 #    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
@@ -23,3 +24,12 @@ services:
     ports:
       - 7878:7878
     restart: unless-stopped
+    networks:
+      - proxied
+      - media
+
+networks:
+  proxied:
+    external: true
+  media:
+    external: true

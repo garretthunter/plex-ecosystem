@@ -20,6 +20,7 @@ include:
 # Disabled services
 # Not working as expected
 #  - plex-music-ratings-sync/compose.yml # Sync ratings between plex and file metadata
+#  - profilarr.yml           # Quality profile management for Radarr and Sonarr
 # Offloaded to Raspberry Pi server
 #  - tautulli.yml            # Plex usage monitoring
 #  - prowlarr.yml            # Torrent and Usenet indexer

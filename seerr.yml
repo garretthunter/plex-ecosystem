@@ -25,4 +25,13 @@ services:
       retries: 3
     volumes:
       - ${APP_CONFIG}/seerr:/app/config # Moved outside of docker for portability
+    networks:
+      - proxied
+      - media
+
+networks:
+  proxied:
+    external: true
+  media:
+    external: true
 
