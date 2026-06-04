@@ -1,3 +1,7 @@
+##
+# Plex Music Ratings Sync - Sync ratings between Plex and music file metadata
+# GitHub: https://github.com/rfgamaral/plex-music-ratings-sync
+##
 services:
   plex-music-ratings-sync:
     image: ghcr.io/rfgamaral/plex-music-ratings-sync
@@ -5,10 +9,9 @@ services:
     command: sync
     restart: on-failure:2
     volumes:
-      - ${APP_CONFIG}/plex-music-ratings-sync:/app/data       # Moved outside of docker for portability
-      - ${PLEX_MEDIA}/media/music:/plex/music # Common root directory for plex, qBittorrent, sabnzbd, radarr, and sonarr
-#      - /host/app/data:/app/data
-#      - /host/plex/music:/plex/music
+      - ${HOST_MOUNT}/config/plex-music-ratings-sync:/app/data
+      - ${HOST_MOUNT}/data/media/music:/data/media/music
+
   ofelia-scheduler:
     image: mcuadros/ofelia
     container_name: ofelia-scheduler

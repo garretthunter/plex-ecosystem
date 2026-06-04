@@ -82,7 +82,6 @@ Follows the [TRaSH Guides folder structure](https://trash-guides.info/File-and-F
 
 | Service | Port | Description |
 |---|---|---|
-| [Nginx Proxy Manager](https://nginxproxymanager.com) | 80, 81, 443 | Reverse proxy with Let's Encrypt SSL |
 | [Plex](https://plex.tv) | 32400 | Media streaming server |
 | [Seerr](https://seerr.dev) | 5055 | Media discovery and request management |
 | [Sonarr](https://wiki.servarr.com/en/sonarr) | 8989 | TV show automation |
@@ -91,13 +90,6 @@ Follows the [TRaSH Guides folder structure](https://trash-guides.info/File-and-F
 | [qBittorrent](https://qbittorrent.org) | 8282 | Torrent downloader |
 | [Apprise](https://github.com/caronc/apprise) | 8000 | Multi-platform push notifications |
 | [Notifiarr](https://notifiarr.com) | 5454 | Server notification client |
-| [Atlas](https://github.com/karam-ajaj/atlas) | 8888, 8889 | Home network scanner and visualizer |
-
-### Optional (uncomment in compose.yml)
-
-| Service | Port | Description |
-|---|---|---|
-| [Portainer](https://portainer.io) | 9000, 9443 | Docker management UI |
 
 ### Disabled
 
