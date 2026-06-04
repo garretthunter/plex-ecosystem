@@ -48,6 +48,7 @@ ${HOST_MOUNT}
 │   ├── nginx-proxy-manager
 │   ├── notifiarr
 │   ├── plex
+│   ├── plex-music-ratings-sync
 │   ├── qbittorrent
 │   ├── radarr
 │   ├── sabnzbd
@@ -90,6 +91,7 @@ Follows the [TRaSH Guides folder structure](https://trash-guides.info/File-and-F
 | [qBittorrent](https://qbittorrent.org) | 8282 | Torrent downloader |
 | [Apprise](https://github.com/caronc/apprise) | 8000 | Multi-platform push notifications |
 | [Notifiarr](https://notifiarr.com) | 5454 | Server notification client |
+| [Plex Music Ratings Sync](https://github.com/rfgamaral/plex-music-ratings-sync) | — | Sync ratings between Plex and music file metadata (scheduled daily) |
 
 ### Disabled
 
