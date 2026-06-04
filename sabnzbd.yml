@@ -6,8 +6,7 @@ services:
   sabnzbd:
     container_name: sabnzbd
     image: lscr.io/linuxserver/sabnzbd:latest
-    depends_on: 
-      - nginx-proxy-manager
+
 #    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000

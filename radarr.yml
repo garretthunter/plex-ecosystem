@@ -7,8 +7,7 @@ services:
   radarr:
     container_name: radarr
     image: lscr.io/linuxserver/radarr:latest
-    depends_on: 
-      - nginx-proxy-manager
+    depends_on:
       - qbittorrent
       - sabnzbd
 #      - profilarr

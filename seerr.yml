@@ -7,8 +7,7 @@ services:
     image: ghcr.io/seerr-team/seerr:latest  
     init: true
     container_name: seerr
-    depends_on: 
-      - nginx-proxy-manager
+    depends_on:
       - radarr
       - sonarr
     restart: unless-stopped

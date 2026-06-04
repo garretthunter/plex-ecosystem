@@ -2,8 +2,7 @@
 # My Plex services stack 
 ##
 
-include: 
-  - nginx-proxy-manager.yml # Proxy server
+include:
   - sabnzbd.yml             # Usenet downloader
   - qbittorrent.yml         # Torrent downloader
   - apprise.yml             # Notification automation service
@@ -12,10 +11,11 @@ include:
   - radarr.yml              # Movie download automation
   - seerr.yml               # Media discovery and request service
   - plex/compose.yml        # Plex media server
-  - atlas.yml               # Network infrastructure visualizer
 
-# Optional services
-#  - portainer.yml           # Docker management UI
+# Moved to ../infrastructure/
+#  - nginx-proxy-manager.yml
+#  - portainer.yml
+#  - atlas.yml
 
 # Disabled services
 # Not working as expected

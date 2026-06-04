@@ -6,8 +6,7 @@ services:
   qbittorrent:
     container_name: qbittorrent
     image: lscr.io/linuxserver/qbittorrent:latest
-    depends_on: 
-      - nginx-proxy-manager
+
 #    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
