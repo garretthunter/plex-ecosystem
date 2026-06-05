@@ -7,7 +7,6 @@ name: plex-ecosystem
 include:
   - sabnzbd.yml             # Usenet downloader
   - qbittorrent.yml         # Torrent downloader
-  - apprise.yml             # Notification automation service
   - notifiarr.yml           # Server notification service
   - sonarr.yml              # TV show download automation
   - radarr.yml              # Movie download automation
