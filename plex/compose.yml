@@ -18,8 +18,10 @@ services:
       - ${HOST_MOUNT}/config/plex:/config
       - ${HOST_MOUNT}/data:/data
       - ${HOST_MOUNT}/plex-transcode-temp:/transcode
+    healthcheck:
+      test: curl -sf http://localhost:32400/identity || exit 1
+      start_period: 60s
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
-#    devices:
-#      - "/dev/bus/usb:/dev/bus/usb"
-#volumes:
-#  plex:
