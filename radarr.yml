@@ -23,6 +23,8 @@ services:
       - ${HOST_MOUNT}/config/radarr:/config
       - ${HOST_MOUNT}/backups/radarr:/config/Backups
       - ${HOST_MOUNT}/data:/data
+    ports:
+      - 7878:7878
     healthcheck:
       test: curl -sf http://localhost:7878/ping || exit 1
       start_period: 30s
