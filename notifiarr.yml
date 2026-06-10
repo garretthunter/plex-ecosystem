@@ -18,6 +18,8 @@ services:
         condition: service_healthy
     restart: unless-stopped 
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=America/Los_Angeles
       - DN_API_KEY=${NOTIFIARR_API_KEY}
     volumes:
