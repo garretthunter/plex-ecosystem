@@ -8,9 +8,12 @@ services:
     container_name: radarr
     image: lscr.io/linuxserver/radarr:latest
     depends_on:
-      - qbittorrent
-      - sabnzbd
-#      - profilarr
+      qbittorrent:
+        condition: service_healthy
+      sabnzbd:
+        condition: service_healthy
+#      profilarr:
+#        condition: service_started
 #    network_mode: 'host' # Use host networking for better performance
     environment:
       - PUID=1000
@@ -20,13 +23,20 @@ services:
       - ${HOST_MOUNT}/config/radarr:/config
       - ${HOST_MOUNT}/backups/radarr:/config/Backups
       - ${HOST_MOUNT}/data:/data
-    ports:
-      - 7878:7878
+    healthcheck:
+      test: curl -sf http://localhost:7878/ping || exit 1
+      start_period: 30s
+      interval: 15s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - media
+      - proxied
 
 networks:
-
   media:
+  proxied:
+    external: true
+    name: proxied
 

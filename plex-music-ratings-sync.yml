@@ -8,6 +8,9 @@ services:
     container_name: plex-music-ratings-sync
     command: sync
     restart: on-failure:2
+    depends_on:
+      plex:
+        condition: service_healthy
     volumes:
       - ${HOST_MOUNT}/config/plex-music-ratings-sync:/app/data
       - ${HOST_MOUNT}/data/media/music:/data/media/music

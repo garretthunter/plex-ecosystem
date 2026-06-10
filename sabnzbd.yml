@@ -18,10 +18,19 @@ services:
       - ${HOST_MOUNT}/data/usenet:/data/usenet
     ports:
       - 8080:8080
+    healthcheck:
+      test: curl -sf http://localhost:8080/api?mode=version || exit 1
+      start_period: 30s
+      interval: 15s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - media
+      - proxied
 
 networks:
-
   media:
+  proxied:
+    external: true
+    name: proxied

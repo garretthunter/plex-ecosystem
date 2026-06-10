@@ -8,8 +8,10 @@ services:
     init: true
     container_name: seerr
     depends_on:
-      - radarr
-      - sonarr
+      radarr:
+        condition: service_healthy
+      sonarr:
+        condition: service_healthy
     restart: unless-stopped
     environment:
       - TZ=America/Los_Angeles
@@ -25,9 +27,12 @@ services:
       - ${HOST_MOUNT}/config/seerr:/app/config
     networks:
       - media
+      - proxied
 
 networks:
-
   media:
+  proxied:
+    external: true
+    name: proxied
 
 
