@@ -14,12 +14,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${APP_CONFIG}/portainer:/data # Moved outside of docker for portability
-#    networks:
-#      - a_network
+    networks:
+      - media
 
-#networks:
-#  a_network:
-#    name: portainer_network
+networks:
+  media:
+    external: true
 
 #  agent:
 #    image: portainer/agent:latest

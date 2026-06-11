@@ -8,10 +8,14 @@ services:
     init: true
     container_name: seerr
     depends_on:
-      - radarr
-      - sonarr
+      radarr:
+        condition: service_healthy
+      sonarr:
+        condition: service_healthy
     restart: unless-stopped
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=America/Los_Angeles
     ports:
       - 5055:5055
@@ -25,9 +29,12 @@ services:
       - ${HOST_MOUNT}/config/seerr:/app/config
     networks:
       - media
+      - proxied
 
 networks:
-
   media:
+  proxied:
+    external: true
+    name: proxied
 
 

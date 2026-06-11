@@ -41,10 +41,6 @@ ${HOST_MOUNT}
 │   ├── sabnzbd
 │   └── sonarr
 ├── config
-│   ├── apprise
-│   │   ├── attach
-│   │   ├── config
-│   │   └── plugins
 │   ├── nginx-proxy-manager
 │   ├── notifiarr
 │   ├── plex
@@ -89,7 +85,6 @@ Follows the [TRaSH Guides folder structure](https://trash-guides.info/File-and-F
 | [Radarr](https://wiki.servarr.com/en/radarr) | 7878 | Movie automation |
 | [SABnzbd](https://sabnzbd.org) | 8080 | Usenet downloader |
 | [qBittorrent](https://qbittorrent.org) | 8282 | Torrent downloader |
-| [Apprise](https://github.com/caronc/apprise) | 8000 | Multi-platform push notifications |
 | [Notifiarr](https://notifiarr.com) | 5454 | Server notification client |
 | [Plex Music Ratings Sync](https://github.com/rfgamaral/plex-music-ratings-sync) | — | Sync ratings between Plex and music file metadata (scheduled daily) |
 
@@ -111,9 +106,17 @@ Plex and Atlas use `network_mode: host` — Plex for DLNA/GDM discovery, Atlas f
 
 Plex is built from a custom Dockerfile that installs the [Audnexus.bundle](https://github.com/djdembeck/Audnexus.bundle) plugin at container startup via an init script. The plugin is cloned into the `/config` volume so it persists across container rebuilds. Used with [Prologue](https://prologue.audio/) for audiobook playback.
 
+## External Services
+
+The following services are used by this stack but maintained as separate projects, as they serve multiple applications beyond the plex ecosystem:
+
+| Service | Port | Description |
+|---|---|---|
+| [Apprise](https://github.com/caronc/apprise) | 8000 | Multi-platform push notifications |
+| [nginx-proxy-manager](https://nginxproxymanager.com) | 80/443 | Reverse proxy and SSL termination |
+
 ## References
 
 - [TRaSH Guides](https://trash-guides.info/File-and-Folder-Structure/How-to-set-up/Docker/) — folder structure and quality profiles
 - [Servarr Wiki](https://wiki.servarr.com/) — Sonarr, Radarr, Prowlarr documentation
 - [Plex Audiobook Guide](https://github.com/seanap/Plex-Audiobook-Guide)
-- [Saltbox](https://docs.saltbox.dev/saltbox/basics/basics/) — possible future SSO solution

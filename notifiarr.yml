@@ -9,8 +9,17 @@ services:
 
 #    network_mode: 'host' # Use host networking for better performance
     hostname: notifiarr-${HOSTNAME}
+    depends_on:
+      plex:
+        condition: service_healthy
+      sonarr:
+        condition: service_healthy
+      radarr:
+        condition: service_healthy
     restart: unless-stopped 
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=America/Los_Angeles
       - DN_API_KEY=${NOTIFIARR_API_KEY}
     volumes:
@@ -21,8 +30,11 @@ services:
       - 5454:5454
     networks:
       - media
+      - proxied
 
 networks:
-
   media:
+  proxied:
+    external: true
+    name: proxied
 

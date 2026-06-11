@@ -21,11 +21,20 @@ services:
       - 8282:8282 # Changed from the default 8080 to not conflict with sabnzbd
       - 6881:6881
       - 6881:6881/udp
+    healthcheck:
+      test: curl -sf http://localhost:8282 || exit 1
+      start_period: 30s
+      interval: 15s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     networks:
       - media
+      - proxied
 
 networks:
-
   media:
+  proxied:
+    external: true
+    name: proxied
 
