@@ -113,7 +113,6 @@ The following services are used by this stack but maintained as separate project
 | Service | Port | Description |
 |---|---|---|
 | [Apprise](https://github.com/caronc/apprise) | 8000 | Multi-platform push notifications |
-| [Authentik](https://goauthentik.io) | 9100 | SSO identity provider |
 | [nginx-proxy-manager](https://nginxproxymanager.com) | 80/443 | Reverse proxy and SSL termination |
 
 ## References
