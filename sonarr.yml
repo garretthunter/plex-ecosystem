@@ -1,0 +1,50 @@
+##
+# Sonarr - TV show search and retrieval service https://sonarr.tv/
+# Docker Hub: https://hub.docker.com/r/linuxserver/sonarr
+# Wiki: https://wiki.servarr.com/
+##  
+services:
+  sonarr:
+    container_name: sonarr
+    image: lscr.io/linuxserver/sonarr:latest
+    depends_on:
+      prowlarr:
+        condition: service_healthy
+      sabnzbd:
+        condition: service_healthy
+      qbittorrent:
+        condition: service_healthy
+#      profilarr:
+#        condition: service_started
+#    network_mode: 'host' # Use host networking for better performance
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${HOST_MOUNT}/config/sonarr:/config
+      - ${HOST_MOUNT}/backups/sonarr:/config/Backups
+      - ${HOST_MOUNT}/data:/data
+    healthcheck:
+      test: curl -sf http://localhost:8989/ping || exit 1
+      start_period: 30s
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    # Capped so this can't monopolize this 4-thread host and starve Plex playback:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    networks:
+      - media
+      - proxied
+
+networks:
+  media:
+  proxied:
+    external: true
+    name: proxied
+

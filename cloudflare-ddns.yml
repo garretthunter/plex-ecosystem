@@ -1,0 +1,21 @@
+##
+# Cloudflare DDNS - keeps request.blacktower.com's A record pointed at the
+# current WAN IP, since the ISP rotates it on router reboot.
+# Docker Hub: https://hub.docker.com/r/favonia/cloudflare-ddns
+##
+services:
+  cloudflare-ddns:
+    container_name: cloudflare-ddns
+    image: favonia/cloudflare-ddns:latest
+    restart: unless-stopped
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_KEY}
+      - DOMAINS=request.blacktower.com
+      - PROXIED=true
+      - IP6_PROVIDER=none
+      - UPDATE_CRON=@every 5m
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 64M

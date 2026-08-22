@@ -1,0 +1,34 @@
+##
+# Tautulli - Plex usage monitoring service https://tautulli.com/
+# Docker Hub: https://hub.docker.com/r/linuxserver/tautulli
+##
+services:
+  tautulli:
+    container_name: tautulli
+    image: lscr.io/linuxserver/tautulli:latest
+    depends_on:
+      plex:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${HOST_MOUNT}/config/tautulli:/config
+      - ${HOST_MOUNT}/backups/tautulli:/config/backups
+    healthcheck:
+      test: curl -sf http://localhost:8181/ || exit 1
+      start_period: 30s
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - media
+      - proxied
+
+networks:
+  media:
+  proxied:
+    external: true
+    name: proxied

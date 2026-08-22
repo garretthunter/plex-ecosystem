@@ -1,0 +1,36 @@
+##
+# Plex - Media sharing service https://plex.tv
+# Docker Hub: https://hub.docker.com/r/plexinc/pms-docker
+##
+services:
+  plex:
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: plex
+    network_mode: host
+    environment:
+      - PLEX_UID=1000
+      - PLEX_GID=1000
+      - TZ=America/Los_Angeles
+      - CHANGE_CONFIG_DIR_OWNERSHIP=true
+    devices:
+      - /dev/dri:/dev/dri   # Intel HD 620 iGPU passthrough for hardware transcoding (Plex Pass)
+    group_add:
+      - "992"               # host "render" group gid, grants PLEX_GID 1000 access to /dev/dri/renderD128
+    volumes:
+      - ${LOCAL_MOUNT}/plex:/config
+      # No separate mount for plex-transcode-temp: it's already reachable at
+      # /data/plex-transcode-temp through the mount below. A second bind mount to the same
+      # host directory still shows up as a distinct mount point inside the container, which
+      # risks EXDEV on any rename Plex does between the two paths instead of an atomic move.
+      # Transcoder temp directory is set to /data/plex-transcode-temp in Plex Settings, not
+      # a dedicated /transcode path.
+      - ${HOST_MOUNT}/data:/data
+    healthcheck:
+      test: curl -sf http://localhost:32400/identity || exit 1
+      start_period: 60s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped

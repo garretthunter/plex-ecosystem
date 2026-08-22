@@ -1,0 +1,1478 @@
+{
+  "_id": "CdDW9_Bs0",
+  "name": "H264 / AC3 / MKV",
+  "description": "H264 / AC3 / MKV",
+  "tags": "",
+  "flowPlugins": [
+    {
+      "name": "Set video encode H264 medium",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetVideoEncoder",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputCodec": "h264",
+        "ffmpegQuality": "",
+        "ffmpegQualityEnabled": "false",
+        "ffmpegPreset": "medium"
+      },
+      "fpEnabled": true,
+      "id": "Cl-qIfVE2",
+      "position": {
+        "x": 816,
+        "y": 1116
+      }
+    },
+    {
+      "name": "Set video encode H264 medium",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetVideoEncoder",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputCodec": "h264",
+        "ffmpegQuality": "",
+        "ffmpegQualityEnabled": "false",
+        "ffmpegPreset": "medium"
+      },
+      "fpEnabled": true,
+      "id": "mpCNoB0rJ",
+      "position": {
+        "x": 684,
+        "y": 1368
+      }
+    },
+    {
+      "name": "Is video bit rate < 5500 kbps",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const ffProbeData = args.inputFileObj.ffProbeData;\n  const streams = ffProbeData.streams;\n  const format = ffProbeData.format || {};\n  const CEILING_BPS = 5500000;\n\n  const parseDuration = (d) => {\n    if (!d) return null;\n    const parts = String(d).split(':');\n    if (parts.length !== 3) return null;\n    const [h, m, s] = parts;\n    const seconds = Number(h) * 3600 + Number(m) * 60 + parseFloat(s);\n    return Number.isFinite(seconds) ? seconds : null;\n  };\n\n  const video = streams.find((s) => s.codec_type === 'video');\n  const audios = streams.filter((s) => s.codec_type === 'audio');\n\n  let videoBitRate = null;\n\n  if (video) {\n    const directBitRate = Number(video.bit_rate);\n    if (Number.isFinite(directBitRate) && directBitRate > 0) {\n      videoBitRate = directBitRate;\n    } else {\n      // no per-stream bitrate reported - estimate from duration + total size minus audio\n      let duration = Number(video.duration);\n      if (!Number.isFinite(duration) || duration <= 0) {\n        duration = parseDuration(video.tags && video.tags.DURATION);\n      }\n      if (!Number.isFinite(duration) || duration <= 0) {\n        duration = Number(format.duration);\n      }\n\n      const size = Number(format.size);\n\n      if (Number.isFinite(duration) && duration > 0 && Number.isFinite(size) && size > 0) {\n        const totalBits = size * 8;\n        let audioBits = 0;\n        for (const a of audios) {\n          const abr = Number(a.bit_rate);\n          audioBits += (Number.isFinite(abr) && abr > 0 ? abr : 192000) * duration;\n        }\n        videoBitRate = (totalBits - audioBits) / duration;\n      }\n      // if duration or size is also missing, videoBitRate stays null - genuinely unknowable, assume compliant\n    }\n  }\n\n  const withinRange = videoBitRate === null || videoBitRate <= CEILING_BPS;\n\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: withinRange ? 1 : 2,\n    variables: args.variables,\n  };\n};\n"
+      },
+      "fpEnabled": true,
+      "id": "FpSd1iSX9",
+      "position": {
+        "x": 612,
+        "y": 1224
+      }
+    },
+    {
+      "name": "Handle multi track audio streams",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const streams = args.inputFileObj.ffProbeData.streams;\n  const CEILING_BPS = 680000;\n  let withinRange = true;\n\n  for (const stream of streams) {\n    if (stream.codec_type !== 'audio') continue;\n    const bitRate = Number(stream.bit_rate);\n    if (Number.isFinite(bitRate) && bitRate > 0 && bitRate > CEILING_BPS) {\n      withinRange = false;\n    }\n  }\n\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: withinRange ? 1 : 2,\n    variables: args.variables,\n  };\n};\n"
+      },
+      "fpEnabled": true,
+      "id": "69wbCNy5b",
+      "position": {
+        "x": 840,
+        "y": 684
+      }
+    },
+    {
+      "name": "Handle mono and dual audio streams",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const streams = args.inputFileObj.ffProbeData.streams;\n  const CEILING_BPS = 250000;\n  let withinRange = true;\n\n  for (const stream of streams) {\n    if (stream.codec_type !== 'audio') continue;\n    const bitRate = Number(stream.bit_rate);\n    if (Number.isFinite(bitRate) && bitRate > 0 && bitRate > CEILING_BPS) {\n      withinRange = false;\n    }\n  }\n\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: withinRange ? 1 : 2,\n    variables: args.variables,\n  };\n};\n"
+      },
+      "fpEnabled": true,
+      "id": "iHlCV18kb",
+      "position": {
+        "x": 516,
+        "y": 684
+      }
+    },
+    {
+      "name": "Send Discord Warning",
+      "sourceRepo": "Community",
+      "pluginName": "webRequest",
+      "version": "1.0.0",
+      "inputsDB": {
+        "requestUrl": "http://apprise:8000/notify/tdarr-success",
+        "requestHeaders": "{\n           \"Content-Type\": \"application/x-www-form-urlencoded\"\n}",
+        "requestBody": "{\n    \"title\": \"TDARR Warning\", \"type\": \"warning\",\n    \"body\": \"Second transcode pass to fix subtitle font size for {{{args.inputFileObj.meta.FileName}}}\"\n\n}\n",
+        "logResponseBody": "true",
+        "output2StatusCodes": "424,429,500-599"
+      },
+      "fpEnabled": true,
+      "id": "Ez13aLzdx",
+      "position": {
+        "x": 660,
+        "y": 2256
+      }
+    },
+    {
+      "name": "Fix stylized subtitles",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const { execFile } = require('child_process');\n  const fs = require('fs');\n  const os = require('os');\n  const path = require('path');\n  const util = require('util');\n  const execFileAsync = util.promisify(execFile);\n\n  const currentFile = args.inputFileObj._id;\n  const stamp = Date.now();\n  const rawSrtPath = path.join(os.tmpdir(), `subs_raw_${stamp}.srt`);\n  const strippedSrtPath = path.join(os.tmpdir(), `subs_stripped_${stamp}.srt`);\n\n  const origExt = path.extname(currentFile);\n  const origBase = path.basename(currentFile, origExt);\n  const remuxedPath = path.join(os.tmpdir(), `${origBase}${origExt}`);\n\n  const { stdout: probeOut } = await execFileAsync('ffprobe', [\n    '-v', 'error',\n    '-select_streams', 's',\n    '-show_entries', 'stream=index,codec_name:stream_tags=language',\n    '-of', 'json',\n    currentFile,\n  ]);\n  const probeData = JSON.parse(probeOut);\n  const subStream = (probeData.streams || []).find((s) => s.codec_name === 'subrip');\n\n  if (!subStream) {\n    return { outputFileObj: args.inputFileObj, outputNumber: 1, variables: args.variables };\n  }\n\n  const language = (subStream.tags && subStream.tags.language) || 'eng';\n\n  // pull the styled SRT out as plain text\n  await execFileAsync('ffmpeg', [\n    '-y', '-i', currentFile,\n    '-map', `0:${subStream.index}`,\n    '-c:s', 'copy',\n    rawSrtPath,\n  ]);\n\n  // strip every inline tag, keep the text\n  const rawText = fs.readFileSync(rawSrtPath, 'utf8');\n  const strippedText = rawText.replace(/<[^>]+>/g, '');\n  fs.writeFileSync(strippedSrtPath, strippedText);\n\n  // remux: everything from the current file except its subtitle and any font\n  // attachments (they existed to render the original styled ASS track; plain SRT\n  // doesn't reference fonts, so they're dead weight once we're in this function),\n  // plus the stripped subtitle\n  await execFileAsync('ffmpeg', [\n    '-y',\n    '-i', currentFile,\n    '-i', strippedSrtPath,\n    '-map', '0:v',\n    '-map', '0:a',\n    '-map', '1:0',\n    '-c', 'copy',\n    '-c:s', 'copy',\n    '-metadata:s:0', `language=${language}`,\n    '-disposition:s:0', 'default',\n    remuxedPath,\n  ]);\n\n  fs.unlinkSync(rawSrtPath);\n  fs.unlinkSync(strippedSrtPath);\n\n  return {\n    outputFileObj: { _id: remuxedPath },\n    outputNumber: 1,\n    variables: args.variables,\n  };\n};\n"
+      },
+      "fpEnabled": true,
+      "id": "H0dLXWHQz",
+      "position": {
+        "x": 660,
+        "y": 2328
+      }
+    },
+    {
+      "name": "needsTranscode",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "Xzuq1rywu",
+      "position": {
+        "x": 1092,
+        "y": 696
+      }
+    },
+    {
+      "name": "Send Discord Warning",
+      "sourceRepo": "Community",
+      "pluginName": "webRequest",
+      "version": "1.0.0",
+      "inputsDB": {
+        "requestUrl": "http://apprise:8000/notify/tdarr-success",
+        "requestHeaders": "{\n           \"Content-Type\": \"application/x-www-form-urlencoded\"\n}",
+        "requestBody": "{\n    \"title\": \"TDARR Warning\", \"type\": \"warning\",\n    \"body\": \"Multiple audio streams converted for {{{args.inputFileObj.meta.FileName}}}\"\n\n}\n",
+        "logResponseBody": "true",
+        "output2StatusCodes": "424,429,500-599"
+      },
+      "fpEnabled": true,
+      "id": "aGycZddx9",
+      "position": {
+        "x": 1092,
+        "y": 840
+      }
+    },
+    {
+      "name": "Channel Count = 1",
+      "sourceRepo": "Community",
+      "pluginName": "checkChannelCount",
+      "version": "1.0.0",
+      "inputsDB": {
+        "channelCount": "1"
+      },
+      "fpEnabled": true,
+      "id": "HGDz-dET2",
+      "position": {
+        "x": 576,
+        "y": 540
+      }
+    },
+    {
+      "name": "Send Discord Success",
+      "sourceRepo": "Community",
+      "pluginName": "webRequest",
+      "version": "1.0.0",
+      "inputsDB": {
+        "requestUrl": "http://apprise:8000/notify/tdarr-success",
+        "requestHeaders": "{\n           \"Content-Type\": \"application/x-www-form-urlencoded\"\n}",
+        "requestBody": "{\n    \"title\": \"TDARR Sucess\", \"type\": \"success\",\n    \"body\": \"Nothing to do for {{{args.inputFileObj.meta.FileName}}}\"\n\n}\n",
+        "logResponseBody": "true",
+        "output2StatusCodes": "424,429,500-599"
+      },
+      "fpEnabled": true,
+      "id": "Wdc1ccPAz",
+      "position": {
+        "x": 912,
+        "y": 1764
+      }
+    },
+    {
+      "name": "needsTranscode",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "6wYgKhSX0",
+      "position": {
+        "x": 564,
+        "y": 780
+      }
+    },
+    {
+      "name": "needsTranscode",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "KIsJ_u7Vh",
+      "position": {
+        "x": 888,
+        "y": 780
+      }
+    },
+    {
+      "name": "needsTranscode",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "QwOn-0Zo2",
+      "position": {
+        "x": 684,
+        "y": 1308
+      }
+    },
+    {
+      "name": "needsTranscode",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "7dAV08eW5",
+      "position": {
+        "x": 816,
+        "y": 984
+      }
+    },
+    {
+      "name": "needsTranscode",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "oiCkVLcI4",
+      "position": {
+        "x": 708,
+        "y": 408
+      }
+    },
+    {
+      "name": "needsTranscode",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "qVXHk2XsU",
+      "position": {
+        "x": 864,
+        "y": 48
+      }
+    },
+    {
+      "name": "Set Resolution 1080p",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetVdeoResolution",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "YsRZsuQ0R",
+      "position": {
+        "x": 816,
+        "y": 1044
+      }
+    },
+    {
+      "name": "Set Container MKV",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetContainer",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "wtWopTvZ3",
+      "position": {
+        "x": 864,
+        "y": -108
+      }
+    },
+    {
+      "name": "Start",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandStart",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "f03fjo9_2",
+      "position": {
+        "x": 768,
+        "y": -420
+      }
+    },
+    {
+      "name": "Set subtitles to SRT",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-c:s srt"
+      },
+      "fpEnabled": true,
+      "id": "J_R8zblhi",
+      "position": {
+        "x": 504,
+        "y": 1692
+      }
+    },
+    {
+      "name": "Is library Movies?",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "{{{args.librarySettings.name}}}",
+        "value": "Movies"
+      },
+      "fpEnabled": true,
+      "id": "JCZkv2KyZ",
+      "position": {
+        "x": 756,
+        "y": 2496
+      }
+    },
+    {
+      "name": "Send Discord Success",
+      "sourceRepo": "Community",
+      "pluginName": "webRequest",
+      "version": "1.0.0",
+      "inputsDB": {
+        "requestUrl": "http://apprise:8000/notify/tdarr-success",
+        "requestHeaders": "{\n           \"Content-Type\": \"application/x-www-form-urlencoded\"\n}",
+        "requestBody": "{\n    \"title\": \"TDARR Sucess\", \"type\": \"success\",\n    \"body\": \"Transcode complete for {{{args.inputFileObj.meta.FileName}}}\"\n\n}\n",
+        "logResponseBody": "true",
+        "output2StatusCodes": "424,429,500-599"
+      },
+      "fpEnabled": true,
+      "id": "jNO5cc6R0",
+      "position": {
+        "x": 756,
+        "y": 2784
+      }
+    },
+    {
+      "name": "Force format",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-vf vpp_qsv=format=nv12"
+      },
+      "fpEnabled": true,
+      "id": "8CxheeKjw",
+      "position": {
+        "x": 864,
+        "y": 96
+      }
+    },
+    {
+      "name": "Notify Sonarr",
+      "sourceRepo": "Community",
+      "pluginName": "notifyRadarrOrSonarr",
+      "version": "2.0.0",
+      "inputsDB": {
+        "arr": "sonarr",
+        "arr_api_key": "8c86476a451e42279f6d3faf23b0b517",
+        "arr_host": "http://sonarr:8989"
+      },
+      "fpEnabled": true,
+      "id": "ngtkVdeH6",
+      "position": {
+        "x": 840,
+        "y": 2712
+      }
+    },
+    {
+      "name": "Sonarr - Wait 60 sec ",
+      "sourceRepo": "Community",
+      "pluginName": "waitTimeout",
+      "version": "1.0.0",
+      "inputsDB": {
+        "amount": "60"
+      },
+      "fpEnabled": true,
+      "id": "BZWcIsw4c",
+      "position": {
+        "x": 840,
+        "y": 2616
+      }
+    },
+    {
+      "name": "Notify Sonarr",
+      "sourceRepo": "Community",
+      "pluginName": "notifyRadarrOrSonarr",
+      "version": "2.0.0",
+      "inputsDB": {
+        "arr": "sonarr",
+        "arr_api_key": "8c86476a451e42279f6d3faf23b0b517",
+        "arr_host": "http://sonarr:8989"
+      },
+      "fpEnabled": true,
+      "id": "IMATSlAdL",
+      "position": {
+        "x": 840,
+        "y": 2568
+      }
+    },
+    {
+      "name": "Notify Radarr",
+      "sourceRepo": "Community",
+      "pluginName": "notifyRadarrOrSonarr",
+      "version": "2.0.0",
+      "inputsDB": {
+        "arr": "radarr",
+        "arr_api_key": "d4f4b8092fce4db4a0a6fd2f1309bcfa",
+        "arr_host": "http://radarr:7878"
+      },
+      "fpEnabled": true,
+      "id": "WLHwE-b88",
+      "position": {
+        "x": 672,
+        "y": 2568
+      }
+    },
+    {
+      "name": "Set audio code AC3",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-c:a ac3"
+      },
+      "fpEnabled": true,
+      "id": "v4LsdUqx3",
+      "position": {
+        "x": 708,
+        "y": 456
+      }
+    },
+    {
+      "name": "Set video bit rate ~5500kbps",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-b:v 5500k -maxrate 6600k -bufsize 11000k"
+      },
+      "fpEnabled": true,
+      "id": "TcInlDUe0",
+      "position": {
+        "x": 684,
+        "y": 1452
+      }
+    },
+    {
+      "name": "Set audio bit rate 224k",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-b:a 224k"
+      },
+      "fpEnabled": true,
+      "id": "0OFay-yUS",
+      "position": {
+        "x": 564,
+        "y": 828
+      }
+    },
+    {
+      "name": "Channel Count = 2",
+      "sourceRepo": "Community",
+      "pluginName": "checkChannelCount",
+      "version": "1.0.0",
+      "inputsDB": {
+        "channelCount": "2"
+      },
+      "fpEnabled": true,
+      "id": "ETLTt221y",
+      "position": {
+        "x": 708,
+        "y": 612
+      }
+    },
+    {
+      "name": "Notify Radarr",
+      "sourceRepo": "Community",
+      "pluginName": "notifyRadarrOrSonarr",
+      "version": "2.0.0",
+      "inputsDB": {
+        "arr": "radarr",
+        "arr_api_key": "d4f4b8092fce4db4a0a6fd2f1309bcfa",
+        "arr_host": "http://radarr:7878"
+      },
+      "fpEnabled": true,
+      "id": "Ij64M4QTn",
+      "position": {
+        "x": 672,
+        "y": 2712
+      }
+    },
+    {
+      "name": "Input File",
+      "sourceRepo": "Community",
+      "pluginName": "inputFile",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "pE6rU7gkW",
+      "position": {
+        "x": 768,
+        "y": -468
+      }
+    },
+    {
+      "name": "Check if h264",
+      "sourceRepo": "Community",
+      "pluginName": "checkVideoCodec",
+      "version": "1.0.0",
+      "inputsDB": {
+        "codec": "h264"
+      },
+      "fpEnabled": true,
+      "id": "91b7IrsEc",
+      "position": {
+        "x": 768,
+        "y": -24
+      }
+    },
+    {
+      "name": "Transcoding",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandExecute",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "450g167D8",
+      "position": {
+        "x": 684,
+        "y": 1848
+      }
+    },
+    {
+      "name": "Set Video Encoder to H264 medium",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandSetVideoEncoder",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputCodec": "h264",
+        "ffmpegQuality": "",
+        "ffmpegQualityEnabled": "false",
+        "ffmpegPreset": "medium"
+      },
+      "fpEnabled": true,
+      "id": "8B_6pRd_U",
+      "position": {
+        "x": 864,
+        "y": 168
+      }
+    },
+    {
+      "name": "Set audio bit rate 640k",
+      "sourceRepo": "Community",
+      "pluginName": "ffmpegCommandCustomArguments",
+      "version": "1.0.0",
+      "inputsDB": {
+        "outputArguments": "-b:a 640k"
+      },
+      "fpEnabled": true,
+      "id": "AmATvfCyB",
+      "position": {
+        "x": 888,
+        "y": 828
+      }
+    },
+    {
+      "name": "Check if AC3",
+      "sourceRepo": "Community",
+      "pluginName": "checkAudioCodec",
+      "version": "1.0.0",
+      "inputsDB": {
+        "codec": "ac3"
+      },
+      "fpEnabled": true,
+      "id": "QlCNgGH18",
+      "position": {
+        "x": 624,
+        "y": 336
+      }
+    },
+    {
+      "name": "Check Video Resolution",
+      "sourceRepo": "Community",
+      "pluginName": "checkVideoResolution",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "NpgyVq4Ws",
+      "position": {
+        "x": 720,
+        "y": 912
+      }
+    },
+    {
+      "name": "Run Health Check",
+      "sourceRepo": "Community",
+      "pluginName": "runHealthCheck",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "BKMcMtleA",
+      "position": {
+        "x": 756,
+        "y": 2400
+      }
+    },
+    {
+      "name": "Apply Radarr naming policy",
+      "sourceRepo": "Community",
+      "pluginName": "applyRadarrOrSonarrNamingPolicy",
+      "version": "1.0.0",
+      "inputsDB": {
+        "arr_api_key": "d4f4b8092fce4db4a0a6fd2f1309bcfa",
+        "arr_host": "http://radarr:7878"
+      },
+      "fpEnabled": true,
+      "id": "zRnn4VtUF",
+      "position": {
+        "x": 672,
+        "y": 2664
+      }
+    },
+    {
+      "name": "Apply Sonarr naming policy",
+      "sourceRepo": "Community",
+      "pluginName": "applyRadarrOrSonarrNamingPolicy",
+      "version": "1.0.0",
+      "inputsDB": {
+        "arr": "sonarr",
+        "arr_api_key": "8c86476a451e42279f6d3faf23b0b517",
+        "arr_host": "http://sonarr:8989"
+      },
+      "fpEnabled": true,
+      "id": "uRbK3x2rR",
+      "position": {
+        "x": 840,
+        "y": 2664
+      }
+    },
+    {
+      "name": "Check File Extension",
+      "sourceRepo": "Community",
+      "pluginName": "checkFileExtension",
+      "version": "1.0.0",
+      "inputsDB": {
+        "extensions": "mkv"
+      },
+      "fpEnabled": true,
+      "id": "67Lm70H40",
+      "position": {
+        "x": 768,
+        "y": -228
+      }
+    },
+    {
+      "name": "Replace Original File",
+      "sourceRepo": "Community",
+      "pluginName": "replaceOriginalFile",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "qiuiIA-bA",
+      "position": {
+        "x": 756,
+        "y": 2448
+      }
+    },
+    {
+      "name": "Radarr - Wait 60 sec",
+      "sourceRepo": "Community",
+      "pluginName": "waitTimeout",
+      "version": "1.0.0",
+      "inputsDB": {
+        "amount": "60"
+      },
+      "fpEnabled": true,
+      "id": "9c29E9rB9",
+      "position": {
+        "x": 672,
+        "y": 2616
+      }
+    },
+    {
+      "name": "On Flow Error",
+      "sourceRepo": "Community",
+      "pluginName": "onFlowError",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "7vn_TXoYt",
+      "position": {
+        "x": 1044,
+        "y": -348
+      }
+    },
+    {
+      "name": "Send Discord Error",
+      "sourceRepo": "Community",
+      "pluginName": "webRequest",
+      "version": "1.0.0",
+      "inputsDB": {
+        "requestUrl": "http://apprise:8000/notify/tdarr-errors",
+        "requestHeaders": "{\n           \"Content-Type\": \"application/x-www-form-urlencoded\"\n}",
+        "requestBody": "{\n    \"body\": \"Tdarr flow error on {{{args.inputFileObj._id}}}\", \n    \"title\": \"Tdarr Error\", \"type\": \"failure\"\n\n}\n",
+        "logResponseBody": "true",
+        "output2StatusCodes": "424,429,500-599"
+      },
+      "fpEnabled": true,
+      "id": "dSc7SvY6S",
+      "position": {
+        "x": 1044,
+        "y": -288
+      }
+    },
+    {
+      "name": "Have subtitles?",
+      "sourceRepo": "Community",
+      "pluginName": "checkStreamProperty",
+      "version": "1.0.0",
+      "inputsDB": {
+        "streamType": "subtitle",
+        "valuesToMatch": "ass,ssa"
+      },
+      "fpEnabled": true,
+      "id": "Tl1Gs_syO",
+      "position": {
+        "x": 576,
+        "y": 1560
+      }
+    },
+    {
+      "name": "needsTranscode",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "PhD9NZRcy",
+      "position": {
+        "x": 864,
+        "y": -156
+      }
+    },
+    {
+      "name": "Run Health Check",
+      "sourceRepo": "Community",
+      "pluginName": "runHealthCheck",
+      "version": "1.0.0",
+      "fpEnabled": true,
+      "id": "it7ChYoPQ",
+      "position": {
+        "x": 912,
+        "y": 1704
+      }
+    },
+    {
+      "name": "needsTranscode?",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "needsTranscode",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "gcuhNdLLO",
+      "position": {
+        "x": 684,
+        "y": 1632
+      }
+    },
+    {
+      "name": "Check Streams Count",
+      "sourceRepo": "Community",
+      "pluginName": "checkStreamsCount",
+      "version": "1.0.0",
+      "inputsDB": {
+        "streamType": "audio"
+      },
+      "fpEnabled": true,
+      "id": "XvCJwy78r",
+      "position": {
+        "x": 768,
+        "y": 252
+      }
+    },
+    {
+      "name": "Handle multiple audio streams",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const streams = args.inputFileObj.ffProbeData.streams;\n  const outputArgs = [];\n  let needsCorrection = false;\n  let audioIndex = 0;\n\n  for (const stream of streams) {\n    if (stream.codec_type !== 'audio') continue;\n\n    const channels = stream.channels || 2;\n    const isSurround = channels >= 3;\n    const targetBitrate = isSurround ? 640000 : 224000;\n    const targetLabel = isSurround ? '640k' : '224k';\n    const currentBitrate = Number(stream.bit_rate) || 0;\n    const alreadyAc3 = stream.codec_name === 'ac3';\n    const withinCeiling = currentBitrate > 0 && currentBitrate <= targetBitrate;\n\n    if (alreadyAc3 && withinCeiling) {\n      // already compliant on this stream specifically - leave it alone\n      outputArgs.push(`-c:a:${audioIndex}`, 'copy');\n    } else {\n      outputArgs.push(`-c:a:${audioIndex}`, 'ac3', `-b:a:${audioIndex}`, targetLabel);\n      needsCorrection = true;\n    }\n\n    audioIndex += 1;\n  }\n\n  args.variables.ffmpegCommand.overallOuputArguments.push(...outputArgs);\n\n  if (needsCorrection) {\n    if (!args.variables.user) args.variables.user = {};\n    args.variables.user.needsTranscode = '1';\n  }\n\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: 1,\n    variables: args.variables,\n  };\n};\n"
+      },
+      "fpEnabled": true,
+      "id": "_h2PacgEK",
+      "position": {
+        "x": 1092,
+        "y": 756
+      }
+    },
+    {
+      "name": "Has Styled Subs",
+      "sourceRepo": "Community",
+      "pluginName": "setFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "hadStyledSubs",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "F1dwc7pl4",
+      "position": {
+        "x": 504,
+        "y": 1632
+      }
+    },
+    {
+      "name": "Has Styled Subs?",
+      "sourceRepo": "Community",
+      "pluginName": "checkFlowVariable",
+      "version": "1.0.0",
+      "inputsDB": {
+        "variable": "hadStyledSubs",
+        "value": "1"
+      },
+      "fpEnabled": true,
+      "id": "OlExDoQ1X",
+      "position": {
+        "x": 744,
+        "y": 2184
+      }
+    },
+    {
+      "name": "Strip incompatible streams",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const streams = args.variables.ffmpegCommand.streams;\n  for (const s of streams) {\n    if (s.codec_type === 'data') {\n      s.removed = true;\n    }\n  }\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: 1,\n    variables: args.variables,\n  };\n};\n"
+      },
+      "fpEnabled": true,
+      "id": "8bhoujFyQ",
+      "position": {
+        "x": 768,
+        "y": -360
+      }
+    },
+    {
+      "name": "Fix 10-bit H264 QSV decode",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const streams = args.variables.ffmpegCommand.streams;\n  for (const s of streams) {\n    if (\n      s.codec_type === 'video'\n      && s.codec_name === 'h264'\n      && String(s.bits_per_raw_sample) === '10'\n      && s.outputArgs.includes('h264_qsv')\n    ) {\n      // QSV hardware decode does not support H264 High10 (10-bit) on this\n      // iGPU (\"Error submitting packet to decoder: Function not implemented\").\n      // Force software decode for this stream, then convert to 8-bit NV12 in\n      // software before the QSV encoder, which also requires 8-bit input.\n      s.inputArgs = s.inputArgs.filter(\n        (a) => a !== '-hwaccel' && a !== 'qsv' && a !== '-hwaccel_output_format',\n      );\n      s.outputArgs.push('-vf', 'format=nv12');\n    }\n  }\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: 1,\n    variables: args.variables,\n  };\n};\n"
+      },
+      "fpEnabled": true,
+      "id": "LiC2IhdZs",
+      "position": {
+        "x": 684,
+        "y": 1776
+      }
+    },
+    {
+      "name": "Strip extra PGS/VobSub subtitles",
+      "sourceRepo": "Community",
+      "pluginName": "customFunction",
+      "version": "1.0.0",
+      "inputsDB": {
+        "code": "module.exports = async (args) => {\n  const { execFile } = require('child_process');\n  const util = require('util');\n  const execFileAsync = util.promisify(execFile);\n\n  const streams = args.variables.ffmpegCommand.streams;\n  const imageSubCodecs = ['hdmv_pgs_subtitle', 'dvd_subtitle', 'dvb_subtitle'];\n  const imageSubs = streams.filter(\n    (s) => s.codec_type === 'subtitle' && imageSubCodecs.includes(s.codec_name)\n  );\n\n  if (imageSubs.length > 1) {\n    const { stdout } = await execFileAsync('ffprobe', [\n      '-v', 'error',\n      '-select_streams', 's',\n      '-show_entries', 'stream=index,codec_name:stream_tags=language',\n      '-of', 'json',\n      args.inputFileObj._id,\n    ]);\n    const probeStreams = JSON.parse(stdout).streams || [];\n    const langByIndex = {};\n    for (const ps of probeStreams) {\n      langByIndex[ps.index] = (ps.tags && ps.tags.language) || '';\n    }\n\n    const keep = imageSubs.find((s) => langByIndex[s.index] === 'eng') || imageSubs[0];\n    for (const s of imageSubs) {\n      if (s !== keep) {\n        s.removed = true;\n      }\n    }\n    args.variables.needsTranscode = '1';\n  }\n\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: 1,\n    variables: args.variables,\n  };\n};\n"
+      },
+      "fpEnabled": true,
+      "id": "PGSbLm3xQ",
+      "position": {
+        "x": 768,
+        "y": -300
+      }
+    }
+  ],
+  "flowEdges": [
+    {
+      "source": "67Lm70H40",
+      "sourceHandle": "1",
+      "target": "91b7IrsEc",
+      "targetHandle": null,
+      "id": "pYEEUyGBA"
+    },
+    {
+      "source": "BKMcMtleA",
+      "sourceHandle": "1",
+      "target": "qiuiIA-bA",
+      "targetHandle": null,
+      "id": "KpvbSfZZh"
+    },
+    {
+      "source": "WLHwE-b88",
+      "sourceHandle": "1",
+      "target": "9c29E9rB9",
+      "targetHandle": null,
+      "id": "e65ecKkJ_"
+    },
+    {
+      "source": "9c29E9rB9",
+      "sourceHandle": "1",
+      "target": "zRnn4VtUF",
+      "targetHandle": null,
+      "id": "p2Qe8u_rd"
+    },
+    {
+      "source": "IMATSlAdL",
+      "sourceHandle": "1",
+      "target": "BZWcIsw4c",
+      "targetHandle": null,
+      "id": "xb8Dy8FeV"
+    },
+    {
+      "source": "BZWcIsw4c",
+      "sourceHandle": "1",
+      "target": "uRbK3x2rR",
+      "targetHandle": null,
+      "id": "nf-q8SxN7"
+    },
+    {
+      "source": "8CxheeKjw",
+      "sourceHandle": "1",
+      "target": "8B_6pRd_U",
+      "targetHandle": null,
+      "id": "qAByaFUtw"
+    },
+    {
+      "source": "uRbK3x2rR",
+      "sourceHandle": "1",
+      "target": "ngtkVdeH6",
+      "targetHandle": null,
+      "id": "JuJAlfhb7"
+    },
+    {
+      "source": "7vn_TXoYt",
+      "sourceHandle": "1",
+      "target": "dSc7SvY6S",
+      "targetHandle": null,
+      "id": "BzYW6mmBw"
+    },
+    {
+      "source": "zRnn4VtUF",
+      "sourceHandle": "1",
+      "target": "Ij64M4QTn",
+      "targetHandle": null,
+      "id": "GtD6cgbat"
+    },
+    {
+      "source": "Ij64M4QTn",
+      "sourceHandle": "1",
+      "target": "jNO5cc6R0",
+      "targetHandle": null,
+      "id": "bOahRCw3w"
+    },
+    {
+      "source": "ngtkVdeH6",
+      "sourceHandle": "1",
+      "target": "jNO5cc6R0",
+      "targetHandle": null,
+      "id": "DB4C1cSVZ"
+    },
+    {
+      "source": "qiuiIA-bA",
+      "sourceHandle": "1",
+      "target": "JCZkv2KyZ",
+      "targetHandle": null,
+      "id": "PQGdzdXPR"
+    },
+    {
+      "source": "JCZkv2KyZ",
+      "sourceHandle": "1",
+      "target": "WLHwE-b88",
+      "targetHandle": null,
+      "id": "XhqHRpvN_"
+    },
+    {
+      "source": "JCZkv2KyZ",
+      "sourceHandle": "2",
+      "target": "IMATSlAdL",
+      "targetHandle": null,
+      "id": "WcQcPYwyN"
+    },
+    {
+      "source": "wtWopTvZ3",
+      "sourceHandle": "1",
+      "target": "91b7IrsEc",
+      "targetHandle": null,
+      "id": "OYhmbHLgs"
+    },
+    {
+      "source": "TcInlDUe0",
+      "sourceHandle": "1",
+      "target": "Tl1Gs_syO",
+      "targetHandle": null,
+      "id": "ShdVDRdwd"
+    },
+    {
+      "source": "67Lm70H40",
+      "sourceHandle": "2",
+      "target": "PhD9NZRcy",
+      "targetHandle": null,
+      "id": "93X1mtj29"
+    },
+    {
+      "source": "PhD9NZRcy",
+      "sourceHandle": "1",
+      "target": "wtWopTvZ3",
+      "targetHandle": null,
+      "id": "z3DCIogSe"
+    },
+    {
+      "source": "91b7IrsEc",
+      "sourceHandle": "2",
+      "target": "qVXHk2XsU",
+      "targetHandle": null,
+      "id": "8b8LGy14w"
+    },
+    {
+      "source": "qVXHk2XsU",
+      "sourceHandle": "1",
+      "target": "8CxheeKjw",
+      "targetHandle": null,
+      "id": "6teRBBrKB"
+    },
+    {
+      "source": "QlCNgGH18",
+      "sourceHandle": "2",
+      "target": "oiCkVLcI4",
+      "targetHandle": null,
+      "id": "Duqj9Y2AX"
+    },
+    {
+      "source": "oiCkVLcI4",
+      "sourceHandle": "1",
+      "target": "v4LsdUqx3",
+      "targetHandle": null,
+      "id": "2-u0hhGSX"
+    },
+    {
+      "source": "Tl1Gs_syO",
+      "sourceHandle": "2",
+      "target": "gcuhNdLLO",
+      "targetHandle": null,
+      "id": "NryqZBeCv"
+    },
+    {
+      "source": "gcuhNdLLO",
+      "sourceHandle": "2",
+      "target": "it7ChYoPQ",
+      "targetHandle": null,
+      "id": "Tjdmk2Ahh"
+    },
+    {
+      "source": "gcuhNdLLO",
+      "sourceHandle": "1",
+      "target": "LiC2IhdZs",
+      "targetHandle": null,
+      "id": "02bM5GcLy"
+    },
+    {
+      "source": "0OFay-yUS",
+      "sourceHandle": "1",
+      "target": "NpgyVq4Ws",
+      "targetHandle": null,
+      "id": "nWu8ePXhB"
+    },
+    {
+      "source": "AmATvfCyB",
+      "sourceHandle": "1",
+      "target": "NpgyVq4Ws",
+      "targetHandle": null,
+      "id": "akQnab2QT"
+    },
+    {
+      "source": "KIsJ_u7Vh",
+      "sourceHandle": "1",
+      "target": "AmATvfCyB",
+      "targetHandle": null,
+      "id": "B2kmbsVKC"
+    },
+    {
+      "source": "6wYgKhSX0",
+      "sourceHandle": "1",
+      "target": "0OFay-yUS",
+      "targetHandle": null,
+      "id": "sPTk08xg9"
+    },
+    {
+      "source": "J_R8zblhi",
+      "sourceHandle": "1",
+      "target": "LiC2IhdZs",
+      "targetHandle": null,
+      "id": "7OvlH1YkO"
+    },
+    {
+      "source": "it7ChYoPQ",
+      "sourceHandle": "1",
+      "target": "Wdc1ccPAz",
+      "targetHandle": null,
+      "id": "GbMxfE7aB"
+    },
+    {
+      "source": "v4LsdUqx3",
+      "sourceHandle": "1",
+      "target": "HGDz-dET2",
+      "targetHandle": null,
+      "id": "lAXRtmm_m"
+    },
+    {
+      "source": "QlCNgGH18",
+      "sourceHandle": "1",
+      "target": "HGDz-dET2",
+      "targetHandle": null,
+      "id": "0BDU9k1wg"
+    },
+    {
+      "source": "HGDz-dET2",
+      "sourceHandle": "2",
+      "target": "ETLTt221y",
+      "targetHandle": null,
+      "id": "FbCEsj2Dh"
+    },
+    {
+      "source": "91b7IrsEc",
+      "sourceHandle": "1",
+      "target": "XvCJwy78r",
+      "targetHandle": null,
+      "id": "qVwFDDMvA"
+    },
+    {
+      "source": "8B_6pRd_U",
+      "sourceHandle": "1",
+      "target": "XvCJwy78r",
+      "targetHandle": null,
+      "id": "Ugc4n2jzx"
+    },
+    {
+      "source": "XvCJwy78r",
+      "sourceHandle": "1",
+      "target": "QlCNgGH18",
+      "targetHandle": null,
+      "id": "Qa8bP5F_T"
+    },
+    {
+      "source": "XvCJwy78r",
+      "sourceHandle": "2",
+      "target": "QlCNgGH18",
+      "targetHandle": null,
+      "id": "NABEHde86"
+    },
+    {
+      "source": "XvCJwy78r",
+      "sourceHandle": "3",
+      "target": "Xzuq1rywu",
+      "targetHandle": null,
+      "id": "T1nMPiu8D"
+    },
+    {
+      "source": "aGycZddx9",
+      "sourceHandle": "1",
+      "target": "NpgyVq4Ws",
+      "targetHandle": null,
+      "id": "73tnGDV7q"
+    },
+    {
+      "source": "aGycZddx9",
+      "sourceHandle": "2",
+      "target": "NpgyVq4Ws",
+      "targetHandle": null,
+      "id": "3R67cemc_"
+    },
+    {
+      "source": "Xzuq1rywu",
+      "sourceHandle": "1",
+      "target": "_h2PacgEK",
+      "targetHandle": null,
+      "id": "e-_Rw4QBJ"
+    },
+    {
+      "source": "_h2PacgEK",
+      "sourceHandle": "1",
+      "target": "aGycZddx9",
+      "targetHandle": null,
+      "id": "R_cXtr_v6"
+    },
+    {
+      "source": "Tl1Gs_syO",
+      "sourceHandle": "1",
+      "target": "F1dwc7pl4",
+      "targetHandle": null,
+      "id": "f7xmg7fIP"
+    },
+    {
+      "source": "F1dwc7pl4",
+      "sourceHandle": "1",
+      "target": "J_R8zblhi",
+      "targetHandle": null,
+      "id": "2oySXevYd"
+    },
+    {
+      "source": "450g167D8",
+      "sourceHandle": "1",
+      "target": "OlExDoQ1X",
+      "targetHandle": null,
+      "id": "8-PsP5s3H"
+    },
+    {
+      "source": "OlExDoQ1X",
+      "sourceHandle": "2",
+      "target": "BKMcMtleA",
+      "targetHandle": null,
+      "id": "u5YqDOqMe"
+    },
+    {
+      "source": "H0dLXWHQz",
+      "sourceHandle": "1",
+      "target": "BKMcMtleA",
+      "targetHandle": null,
+      "id": "Xg1o1lH0s"
+    },
+    {
+      "source": "OlExDoQ1X",
+      "sourceHandle": "1",
+      "target": "Ez13aLzdx",
+      "targetHandle": null,
+      "id": "m1PoJqyOg"
+    },
+    {
+      "source": "Ez13aLzdx",
+      "sourceHandle": "2",
+      "target": "H0dLXWHQz",
+      "targetHandle": null,
+      "id": "rfcqTG-mt"
+    },
+    {
+      "source": "Ez13aLzdx",
+      "sourceHandle": "1",
+      "target": "H0dLXWHQz",
+      "targetHandle": null,
+      "id": "bjFFpnc9h"
+    },
+    {
+      "source": "HGDz-dET2",
+      "sourceHandle": "1",
+      "target": "iHlCV18kb",
+      "targetHandle": null,
+      "id": "5Cq6jcxuq"
+    },
+    {
+      "source": "ETLTt221y",
+      "sourceHandle": "1",
+      "target": "iHlCV18kb",
+      "targetHandle": null,
+      "id": "JL3TN57A1"
+    },
+    {
+      "source": "ETLTt221y",
+      "sourceHandle": "2",
+      "target": "69wbCNy5b",
+      "targetHandle": null,
+      "id": "-1T1FMniv"
+    },
+    {
+      "source": "iHlCV18kb",
+      "sourceHandle": "2",
+      "target": "6wYgKhSX0",
+      "targetHandle": null,
+      "id": "cM6UDZ1LC"
+    },
+    {
+      "source": "69wbCNy5b",
+      "sourceHandle": "2",
+      "target": "KIsJ_u7Vh",
+      "targetHandle": null,
+      "id": "FBSV2vAU_"
+    },
+    {
+      "source": "iHlCV18kb",
+      "sourceHandle": "1",
+      "target": "NpgyVq4Ws",
+      "targetHandle": null,
+      "id": "7GtTN63CT"
+    },
+    {
+      "source": "69wbCNy5b",
+      "sourceHandle": "1",
+      "target": "NpgyVq4Ws",
+      "targetHandle": null,
+      "id": "_9UrIyqDU"
+    },
+    {
+      "source": "FpSd1iSX9",
+      "sourceHandle": "1",
+      "target": "Tl1Gs_syO",
+      "targetHandle": null,
+      "id": "Ko_owDoGs"
+    },
+    {
+      "source": "FpSd1iSX9",
+      "sourceHandle": "2",
+      "target": "QwOn-0Zo2",
+      "targetHandle": null,
+      "id": "9Le2SAakO"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "1",
+      "target": "FpSd1iSX9",
+      "targetHandle": null,
+      "id": "8TMwZMQ2D"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "2",
+      "target": "FpSd1iSX9",
+      "targetHandle": null,
+      "id": "6ZPKKn2Bm"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "3",
+      "target": "FpSd1iSX9",
+      "targetHandle": null,
+      "id": "aJnMOOd_S"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "4",
+      "target": "FpSd1iSX9",
+      "targetHandle": null,
+      "id": "YNEBZz3NN"
+    },
+    {
+      "source": "YsRZsuQ0R",
+      "sourceHandle": "1",
+      "target": "Cl-qIfVE2",
+      "targetHandle": null,
+      "id": "VmYFZ4CBn"
+    },
+    {
+      "source": "QwOn-0Zo2",
+      "sourceHandle": "1",
+      "target": "mpCNoB0rJ",
+      "targetHandle": null,
+      "id": "ORU9_r61W"
+    },
+    {
+      "source": "mpCNoB0rJ",
+      "sourceHandle": "1",
+      "target": "TcInlDUe0",
+      "targetHandle": null,
+      "id": "ru5r4bXLM"
+    },
+    {
+      "source": "8bhoujFyQ",
+      "sourceHandle": "1",
+      "target": "PGSbLm3xQ",
+      "targetHandle": null,
+      "id": "TUZzXcxu2"
+    },
+    {
+      "source": "pE6rU7gkW",
+      "sourceHandle": "1",
+      "target": "f03fjo9_2",
+      "targetHandle": null,
+      "id": "M3j2cIwgs"
+    },
+    {
+      "source": "f03fjo9_2",
+      "sourceHandle": "1",
+      "target": "8bhoujFyQ",
+      "targetHandle": null,
+      "id": "T1c4tNub2"
+    },
+    {
+      "source": "Cl-qIfVE2",
+      "sourceHandle": "1",
+      "target": "FpSd1iSX9",
+      "targetHandle": null,
+      "id": "VYF5AgfyR"
+    },
+    {
+      "source": "7dAV08eW5",
+      "sourceHandle": "1",
+      "target": "YsRZsuQ0R",
+      "targetHandle": null,
+      "id": "bRtwlvulM"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "9",
+      "target": "7dAV08eW5",
+      "targetHandle": null,
+      "id": "yHfIUxWp8"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "8",
+      "target": "7dAV08eW5",
+      "targetHandle": null,
+      "id": "BGWG7o1mM"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "7",
+      "target": "7dAV08eW5",
+      "targetHandle": null,
+      "id": "VcGBKwZsl"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "6",
+      "target": "7dAV08eW5",
+      "targetHandle": null,
+      "id": "tbre9as_7"
+    },
+    {
+      "source": "NpgyVq4Ws",
+      "sourceHandle": "5",
+      "target": "7dAV08eW5",
+      "targetHandle": null,
+      "id": "9fWZXkse4"
+    },
+    {
+      "source": "LiC2IhdZs",
+      "sourceHandle": "1",
+      "target": "450g167D8",
+      "targetHandle": null,
+      "id": "TVgcNEbrX"
+    },
+    {
+      "source": "PGSbLm3xQ",
+      "sourceHandle": "1",
+      "target": "67Lm70H40",
+      "targetHandle": null,
+      "id": "PGSStripEdge1"
+    }
+  ]
+}

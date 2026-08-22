@@ -1,0 +1,58 @@
+##
+# Tdarr - Automated media transcoding and library health management https://docs.tdarr.io/
+# Docker Hub: https://ghcr.io/haveagitgat/tdarr
+##
+services:
+  tdarr:
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - UMASK_SET=002
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - nodeID=UbuntuNode
+      - inContainer=true
+      - auth=true
+      - seededApiKey=${TDARR_API_KEY}
+      - apiKey=${TDARR_API_KEY}   # internalNode uses this to authenticate to its own server
+    devices:
+      - /dev/dri:/dev/dri   # Intel HD 620 iGPU passthrough for hevc_qsv/vaapi hardware encode
+    group_add:
+      - "992"               # host "render" group gid, grants PUID 1000 access to /dev/dri/renderD128
+    volumes:
+      - ${LOCAL_MOUNT}/tdarr/server:/app/server
+      - ${LOCAL_MOUNT}/tdarr/configs:/app/configs
+      - ${LOCAL_MOUNT}/tdarr/logs:/app/logs
+      # No separate mount for plex-transcode-temp: it's already reachable at
+      # /data/plex-transcode-temp through the mount below. A second bind mount to the same
+      # host directory still shows up as a distinct mount point inside the container, which
+      # makes Replace Original File hit EXDEV and fall back to a full copy instead of an
+      # atomic rename. Point library cache settings at /data/plex-transcode-temp in the
+      # Tdarr UI, not a dedicated /temp path.
+      - ${HOST_MOUNT}/data:/data
+    healthcheck:
+      test: curl -sf http://localhost:8265/ || exit 1
+      start_period: 30s
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'    # Leaves 2 threads for the rest of the stack
+          memory: 2048M  # Host has 14GB total shared across 13+ containers
+    networks:
+      - media
+      - proxied
+
+networks:
+  media:
+  proxied:
+    external: true
+    name: proxied
