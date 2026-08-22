@@ -198,7 +198,7 @@ A mesh VPN client on the DNS/VPN device is the only way to reach LAN-only servic
 
 If your public IP isn't static, run a small DDNS updater container on a cron schedule (e.g. every 5 minutes) that checks your current public IP and updates the DNS record for your public host(s) via your DNS provider's API when it changes. Cap its resources tightly — it's a trivial workload. Without this, an ISP-forced IP change (e.g. after a router reboot) silently breaks public access until someone notices and fixes the DNS record by hand.
 
-# Tdarr Transcode Flow — DIY Setup Guide
+# Tdarr Transcode Flow
 
 How to configure [Tdarr](https://docs.tdarr.io/) (webUI at `http://<host>:8265`) to transcode a Movies/TV library down to one consistent, broadly-compatible format. This is all app-side configuration built in the Tdarr Flow editor — none of it lives in a config file, so nothing here is applied automatically. You recreate it by hand in the UI (or import a flow export).
 
