@@ -457,7 +457,7 @@
       "pluginName": "ffmpegCommandCustomArguments",
       "version": "1.0.0",
       "inputsDB": {
-        "outputArguments": "-c:a ac3"
+        "outputArguments": "-c:a ac3 -af loudnorm=I=-24:LRA=13:TP=-2.0"
       },
       "fpEnabled": true,
       "id": "v4LsdUqx3",
@@ -826,7 +826,7 @@
       "pluginName": "customFunction",
       "version": "1.0.0",
       "inputsDB": {
-        "code": "module.exports = async (args) => {\n  const streams = args.inputFileObj.ffProbeData.streams;\n  const outputArgs = [];\n  let needsCorrection = false;\n  let audioIndex = 0;\n\n  for (const stream of streams) {\n    if (stream.codec_type !== 'audio') continue;\n\n    const channels = stream.channels || 2;\n    const isSurround = channels >= 3;\n    const targetBitrate = isSurround ? 640000 : 224000;\n    const targetLabel = isSurround ? '640k' : '224k';\n    const currentBitrate = Number(stream.bit_rate) || 0;\n    const alreadyAc3 = stream.codec_name === 'ac3';\n    const withinCeiling = currentBitrate > 0 && currentBitrate <= targetBitrate;\n\n    if (alreadyAc3 && withinCeiling) {\n      // already compliant on this stream specifically - leave it alone\n      outputArgs.push(`-c:a:${audioIndex}`, 'copy');\n    } else {\n      outputArgs.push(`-c:a:${audioIndex}`, 'ac3', `-b:a:${audioIndex}`, targetLabel);\n      needsCorrection = true;\n    }\n\n    audioIndex += 1;\n  }\n\n  args.variables.ffmpegCommand.overallOuputArguments.push(...outputArgs);\n\n  if (needsCorrection) {\n    if (!args.variables.user) args.variables.user = {};\n    args.variables.user.needsTranscode = '1';\n  }\n\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: 1,\n    variables: args.variables,\n  };\n};\n"
+        "code": "module.exports = async (args) => {\n  const streams = args.inputFileObj.ffProbeData.streams;\n  const outputArgs = [];\n  let needsCorrection = false;\n  let audioIndex = 0;\n\n  for (const stream of streams) {\n    if (stream.codec_type !== 'audio') continue;\n\n    const channels = stream.channels || 2;\n    const isSurround = channels >= 3;\n    const targetBitrate = isSurround ? 640000 : 224000;\n    const targetLabel = isSurround ? '640k' : '224k';\n    const currentBitrate = Number(stream.bit_rate) || 0;\n    const alreadyAc3 = stream.codec_name === 'ac3';\n    const withinCeiling = currentBitrate > 0 && currentBitrate <= targetBitrate;\n\n    if (alreadyAc3 && withinCeiling) {\n      // already compliant on this stream specifically - leave it alone\n      outputArgs.push(`-c:a:${audioIndex}`, 'copy');\n    } else {\n      outputArgs.push(`-c:a:${audioIndex}`, 'ac3', `-b:a:${audioIndex}`, targetLabel, `-filter:a:${audioIndex}`, 'loudnorm=I=-24:LRA=13:TP=-2.0');\n      needsCorrection = true;\n    }\n\n    audioIndex += 1;\n  }\n\n  args.variables.ffmpegCommand.overallOuputArguments.push(...outputArgs);\n\n  if (needsCorrection) {\n    if (!args.variables.user) args.variables.user = {};\n    args.variables.user.needsTranscode = '1';\n  }\n\n  return {\n    outputFileObj: args.inputFileObj,\n    outputNumber: 1,\n    variables: args.variables,\n  };\n};\n"
       },
       "fpEnabled": true,
       "id": "_h2PacgEK",
