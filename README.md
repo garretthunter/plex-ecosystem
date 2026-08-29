@@ -208,7 +208,7 @@ What a compliant file looks like once the flow is done with it:
 
 - **Container:** MKV
 - **Video:** H264, QSV hardware encode, preset `medium`, ≤1080p, ≤5500kbps (`maxrate` 6600k, `bufsize` 11000k)
-- **Audio:** AC3, evaluated and corrected per stream independently — mono/stereo ≤224kbps, 3+ channels ≤640kbps
+- **Audio:** AC3, evaluated and corrected per stream independently — mono/stereo ≤224kbps, 3+ channels ≤640kbps, loudness-normalized (`loudnorm=I=-24:LRA=13:TP=-2.0`) whenever a stream is re-encoded
 - **Subtitles:** ASS/SSA streams converted to plain-text SRT with inline styling tags stripped; other subtitle formats left untouched
 
 Why these specific targets, rather than something like HEVC/CRF encoding, is covered in "Design Notes" below.
@@ -259,6 +259,8 @@ Reasoning that would actually get re-broken if this flow were "simplified" witho
 **QSV (`h264_qsv`) needs an explicit pixel-format fix on non-H264 sources.** `-vf vpp_qsv=format=nv12` before `Set Video Encoder`, only on the "not already H264" branch. Without it, any 10-bit source (`yuv420p10le`) fails outright — QSV's H264 encoder only accepts 8-bit input.
 
 **QSV can't hardware-decode 10-bit H264 (`High 10` profile) on some iGPUs at all, even when it hardware-encodes to `h264_qsv` fine and hardware-decodes 10-bit HEVC fine.** A source that's already H264 but 10-bit, needing only a bitrate/resolution fix, skips the "not H264" branch above entirely — so the `vpp_qsv=format=nv12` fix never runs for it, and it wouldn't have helped anyway, since decode fails before any filter runs: `[dec:h264_qsv] Error submitting packet to decoder: Function not implemented`, once per video packet, ending in `transcodeError`. If you hit this on 10-bit-tagged sources, the fix is a `customFunction` node (`Fix 10-bit H264 QSV decode`) placed right before Transcoding, on the path every branch converges through — it strips `-hwaccel qsv -hwaccel_output_format qsv` and adds `-vf format=nv12` only when `codec_name === 'h264' && bits_per_raw_sample === '10' && outputArgs.includes('h264_qsv')`, so it can't touch the already-working not-H264/HEVC branch or files that don't need video re-encoding at all.
+
+**Loudnorm only runs on audio streams that are already being re-encoded for codec/bitrate reasons — never on streams taking the `-c:a copy` path.** Some wide-dynamic-range sources (already AC3, already under the bitrate ceiling) played back too quiet. Loudnorm fixes that, but it requires re-encoding — it can't be applied to a stream that's being stream-copied. Forcing every audio stream through loudnorm regardless of compliance was considered and rejected: ffprobe has no way to tell "already normalized" from "never touched," so that would defeat the step 11 shortcut that skips the whole transcode when a file needs nothing — every already-compliant file would get reprocessed on every scan, forever, for no benefit past the first pass. The accepted tradeoff: a source that's already AC3 and within the bitrate ceiling but happens to be quiet stays quiet, since nothing else about it ever triggers a re-encode.
 
 **AC3, not EAC3 or "copy," for audio; H264, not HEVC, for video.** Both driven by the same constraint: pick codecs that every device on your client list can direct-play natively (older game consoles, browsers, and smart TVs are the usual holdouts). If any client in your target list can't decode HEVC or EAC3, the playback server ends up doing a server-side transcode anyway — the exact ongoing cost this whole normalization pass exists to avoid.
 
