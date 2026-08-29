@@ -206,7 +206,7 @@ How to configure [Tdarr](https://docs.tdarr.io/) (webUI at `http://<host>:8265`)
 
 What a compliant file looks like once the flow is done with it:
 
-- **Container:** MKV
+- **Container:** MKV (provides a more flexible container for subtitles)
 - **Video:** H264, QSV hardware encode, preset `medium`, ≤1080p, ≤5500kbps (`maxrate` 6600k, `bufsize` 11000k)
 - **Audio:** AC3, evaluated and corrected per stream independently — mono/stereo ≤224kbps, 3+ channels ≤640kbps, loudness-normalized (`loudnorm=I=-24:LRA=13:TP=-2.0`) whenever a stream is re-encoded
 - **Subtitles:** ASS/SSA streams converted to plain-text SRT with inline styling tags stripped; other subtitle formats left untouched
@@ -248,7 +248,7 @@ Per library (Movies and TV, configured the same way):
 
 ## Design Notes
 
-Reasoning that would actually get re-broken if this flow were "simplified" without knowing why.
+The goal is to minimize server side transcoding. My primary devices are the Plex app on PS4 and Xbox to at least 1080p compliant TVs. Reasoning that would actually get re-broken if this flow were "simplified" without knowing why.
 
 **Custom JS Functions replace Tdarr's built-in bitrate checks (`checkAudioBitrate`/`checkVideoBitrate`).** Both built-in nodes throw a hard error (`Audio/Video bitrate not found`) and fail the whole job if a stream has no explicit `bit_rate` field in Tdarr's scan — not rare on WEBDL sources, which frequently omit per-stream bitrate metadata entirely. The custom replacements read `ffProbeData` directly, fall back to estimating bitrate from container size ÷ duration minus known audio bits when the direct field is missing, and only treat a file as compliant when it's genuinely unknowable (no size/duration either) — they never throw. Reverting to the built-in nodes reintroduces real job failures on any library with WEBDL sources, not a theoretical edge case.
 
