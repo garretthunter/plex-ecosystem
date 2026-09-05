@@ -16,7 +16,12 @@ services:
         condition: service_healthy
       radarr:
         condition: service_healthy
-    restart: unless-stopped 
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
     environment:
       - PUID=1000
       - PGID=1000

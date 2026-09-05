@@ -34,3 +34,8 @@ services:
       timeout: 5s
       retries: 3
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'    # Shares the 4 threads with Tdarr's own 2.0 cap
+          memory: 4096M  # Host has 14GB total shared across 13+ containers

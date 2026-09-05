@@ -22,7 +22,7 @@ docker compose up -d
 `.env` is gitignored and must be created from `.env.example`. Four variables are required:
 
 | Variable | Description |
-|---|---|
+| --- | --- |
 | `HOST_MOUNT` | Absolute path to the media drive mount point |
 | `LOCAL_MOUNT` | Absolute path to local (internal) storage for config/database data that benefits from faster disk access |
 | `HOSTNAME` | Hostname of the server (used by Notifiarr) |
@@ -35,6 +35,7 @@ Most service volume paths derive from `HOST_MOUNT`; Plex's and Tdarr's config/da
 Real values live encrypted in `secrets.env` (committed) via [sops](https://github.com/getsops/sops) + [age](https://github.com/FiloSottile/age); plaintext `.env` stays gitignored. This means secrets travel with `git clone` — only the age private key needs to move separately. The filename matters: sops infers the dotenv format from the literal `.env` suffix, so don't rename it to something like `.env.enc` (that suffix isn't recognized and breaks both the CLI and editor integrations).
 
 **One-time setup on a new machine:**
+
 ```bash
 # Install sops and age (single static binaries, e.g. into ~/.local/bin)
 # Restore the age private key from your password manager to:
@@ -44,11 +45,13 @@ chmod 600 ~/.config/sops/age/keys.txt
 ```
 
 **Recreate `.env`:**
+
 ```bash
 sops -d secrets.env > .env
 ```
 
 **Edit a secret** (decrypts to `$EDITOR`, re-encrypts on save — also works via the VS Code "SOPS" extension since the filename is auto-detected):
+
 ```bash
 sops secrets.env
 git add secrets.env && git commit -m "rotate secret"
@@ -57,11 +60,14 @@ git add secrets.env && git commit -m "rotate secret"
 The age *private* key never touches git — back it up in a password manager. `.sops.yaml` holds the corresponding public key so `sops` knows who to encrypt to.
 
 ## Directory Structure
+
 Containers expect the following top level directory structure created in the host filesystem. I keep these files outside the container so they persist regardless of the containers' lifecycle.
+
 * backups - Persist backups across container destruction
 * config - Persist configuration data across container lifecycle for services that do not provide automated backups
 * data - Common root directory enabling media file sharing across containers
-```
+
+```text
 ${HOST_MOUNT}
 ├── backups
 │   ├── prowlarr
@@ -100,12 +106,14 @@ ${HOST_MOUNT}
         │   └── tv
         └── incomplete
 ```
+
 Additionally, when running on a linux OS I create a **media** group, assign each of the application users to that group, and set the permissions for any directory the application must access to 2770 including the mount directory. If I were running Ubuntu and my USB drive mounted under /media, I would **sudo chmod 2770 /media/data**.
 
 ### Disk Performance
 
 Plex's and Tdarr's config/database directories live under `${LOCAL_MOUNT}` instead of `${HOST_MOUNT}/config` — both do frequent small random I/O for library scans and job tracking, a poor fit for the external USB drive `data/` lives on:
-```
+
+```text
 ${LOCAL_MOUNT}
 ├── plex
 └── tdarr
@@ -113,40 +121,68 @@ ${LOCAL_MOUNT}
     ├── logs
     └── server
 ```
+
 No group/permission setup needed here the way `${HOST_MOUNT}` requires — this lives under the invoking user's own home directory, already owned correctly.
-# Plex Media Server
-Media streaming application https://www.plex.tv/. I run my stack on a Windows 11 Pro install and chose to run the native Plex server application. I ran Plex in a docker container and it was wayyyy sloowwwwwww and did not connect directly to plex clients. I've left the docker files in the repo for historical purposes
-## Audiobook Support
+
+## Plex Media Server
+
+Media streaming application [https://www.plex.tv/](https://www.plex.tv/). I run my stack on a Windows 11 Pro install and chose to run the native Plex server application. I ran Plex in a docker container and it was wayyyy sloowwwwwww and did not connect directly to Plex clients. I've left the Docker files in the repo for historical purposes.
+
+### Audiobook Support
+
 Plex is built from a custom Dockerfile that installs the [Audnexus.bundle](https://github.com/djdembeck/Audnexus.bundle) plugin at container startup via an init script. The plugin is cloned into the `/config` volume so it persists across container rebuilds.
-## Audiobook Playback
-For audiobook playback use either
+
+### Audiobook Playback
+
+For audiobook playback, use either:
+
 * iOS: [Prologue](https://prologue.audio/)
 * Android: [Chronicle Epilogue](https://www.chronicleapp.net/)
-## Music Ratins Sync
-* [Plex Music Ratings Sync](https://github.com/rfgamaral/plex-music-ratings-sync) - Sync ratings between Plex and music file metadata (scheduled daily)
-## Usage Montoring
-* [Tautulli](https://tautulli.com/) for Plex usage stats. 
-## Transcoding
-* [Tdarr](https://docs.tdarr.io/) - Automated media transcoding and library health management, so files land in a consistent codec/container before Plex ever has to transcode on the fly. 
-# Media Request Management
-* [Seer](https://seerr.dev/) - Plex media discovery and request management service. 
-# Servarr Applications
-These **Index** (find where media is hosted), **Request** (send request to download client), and **Monitor** (search for new versions and media not yet released)
-* [Prowlarr](https://wiki.servarr.com/en/prowlarr) - Indexer manager/proxy built on the popular arr .net/reactjs base stack to integrate with your various PVR apps. Prowlarr supports management of both Torrent Trackers and Usenet Indexers. 
-* [Sonarr](https://wiki.servarr.com/en/sonarr) - PVR for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new episodes of your favorite shows and will grab, sort and rename them. It can also be configured to automatically upgrade the quality of files already downloaded when a better quality format becomes available. 
-* [Radarr](https://wiki.servarr.com/en/radarr) - Movie collection manager for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new movies and will interface with clients and indexers to grab, sort, and rename them. It can also be configured to automatically upgrade the quality of existing files in the library when a better quality format becomes available. 
-# Download Clients
-These take requests from a Servarr application and dowload the media to local storage
-* [SABnzbd](https://sabnzbd.org/) - Usenet download service. 
-* [qBittorrent](https://www.qbittorrent.org/) - Torrent download service. 
-# Notification Applications
-Passes messages from applications to various services such as email and Discord
-* [Apprise](https://hub.docker.com/r/caronc/apprise) - Push Notifications that work with just about every platform. 
-* [Notifiarr](https://notifiarr.com/) - Client of Notifiarr.com notification service 
-# Reverse Proxy Server
+
+### Music Ratings Sync
+
+* [Plex Music Ratings Sync](https://github.com/rfgamaral/plex-music-ratings-sync) - Sync ratings between Plex and music file metadata (scheduled daily).
+
+### Usage Monitoring
+
+* [Tautulli](https://tautulli.com/) for Plex usage stats.
+
+### Transcoding
+
+* [Tdarr](https://docs.tdarr.io/) - Automated media transcoding and library health management, so files land in a consistent codec/container before Plex ever has to transcode on the fly.
+
+## Media Request Management
+
+* [Seer](https://seerr.dev/) - Plex media discovery and request management service.
+
+## Servarr Applications
+
+These **Index** (find where media is hosted), **Request** (send request to download client), and **Monitor** (search for new versions and media not yet released).
+
+* [Prowlarr](https://wiki.servarr.com/en/prowlarr) - Indexer manager/proxy built on the popular arr .net/reactjs base stack to integrate with your various PVR apps. Prowlarr supports management of both Torrent Trackers and Usenet Indexers.
+* [Sonarr](https://wiki.servarr.com/en/sonarr) - PVR for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new episodes of your favorite shows and will grab, sort and rename them. It can also be configured to automatically upgrade the quality of files already downloaded when a better quality format becomes available.
+* [Radarr](https://wiki.servarr.com/en/radarr) - Movie collection manager for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new movies and will interface with clients and indexers to grab, sort, and rename them. It can also be configured to automatically upgrade the quality of existing files in the library when a better quality format becomes available.
+
+## Download Clients
+
+These take requests from a Servarr application and download the media to local storage.
+
+* [SABnzbd](https://sabnzbd.org/) - Usenet download service.
+* [qBittorrent](https://www.qbittorrent.org/) - Torrent download service.
+
+## Notification Applications
+
+Passes messages from applications to various services such as email and Discord.
+
+* [Apprise](https://hub.docker.com/r/caronc/apprise) - Push notifications that work with just about every platform.
+* [Notifiarr](https://notifiarr.com/) - Client of Notifiarr.com notification service.
+
+## Reverse Proxy Server
+
 * [Nginx Proxy Manager](https://nginxproxymanager.com/guide/) - I put all docker containres behind an Nginx Proxy Manager. It provides seemless Let's Encrypt support for SSL and a friendly UI that allows me to customize URLs.
 
-# Docker Image Maintenance
+## Docker Image Maintenance
+
 [`update.sh`](update.sh) keeps the stack current: it pulls the latest images for every service, rebuilds the Plex image from its base (`--pull`), and recreates any containers with changed images via `docker compose up -d`, then prunes dangling images to reclaim disk space. Progress and errors are sent as Discord notifications through Apprise (start, success, or failure with the last few lines of output as the reason). It's meant to be run on a schedule (e.g. cron) or manually, and exits non-zero on failure so it can be monitored.
 
 ## Networking
@@ -157,11 +193,11 @@ Plex uses `network_mode: host` for DLNA/GDM discovery and direct LAN access.
 
 ## References
 
-- [TRaSH Guides](https://trash-guides.info/File-and-Folder-Structure/How-to-set-up/Docker/) — folder structure and quality profiles
-- [Servarr Wiki](https://wiki.servarr.com/) — Sonarr, Radarr, Prowlarr documentation
-- [Plex Audiobook Guide](https://github.com/seanap/Plex-Audiobook-Guide)
+* [TRaSH Guides](https://trash-guides.info/File-and-Folder-Structure/How-to-set-up/Docker/) — folder structure and quality profiles
+* [Servarr Wiki](https://wiki.servarr.com/) — Sonarr, Radarr, Prowlarr documentation
+* [Plex Audiobook Guide](https://github.com/seanap/Plex-Audiobook-Guide)
 
-# Access Architecture
+## Access Architecture
 
 A pattern for exposing a set of self-hosted services under one domain, with a single reverse proxy, split-horizon DNS, one wildcard certificate, and a minimal public attack surface.
 
@@ -173,10 +209,10 @@ Anything that needs host networking for LAN discovery or its own vendor relay (e
 
 ## DNS
 
-- **On the LAN**: run a local DNS resolver (e.g. AdGuard Home or Pi-hole) on a small always-on device. Point your router's DHCP-advertised DNS server at it (most consumer routers have a "custom DNS" or "upstream DNS" setting), and add a wildcard rewrite: `*.yourdomain.com` → the reverse proxy's LAN IP. This lets LAN clients resolve every subdomain locally instead of round-tripping out to the internet and back for a domain that's already yours.
-- **Off the LAN**: use a mesh VPN (e.g. Tailscale) on the same resolver device. Advertise a subnet route for your LAN's CIDR so VPN-connected devices can reach the whole network, and configure a split-DNS nameserver entry (in the VPN provider's admin console) restricted to your domain, pointing at the resolver's VPN IP. This gives VPN clients the same wildcard resolution as LAN clients, wherever they physically are.
-- **From the public internet**: only the subdomain(s) you actually want public get a real public DNS record (e.g. a Cloudflare-proxied A record). Everything else has no public DNS entry at all.
-- Configure each internal proxy host with two names: a short bare name for local convenience over plain HTTP, and the full subdomain for everything else, including all HTTPS access. **Always use the full subdomain form** — a bare single-label name has no TLS coverage and depends on an unreliable DNS search-domain suffix that doesn't work consistently across platforms.
+* **On the LAN**: run a local DNS resolver (e.g. AdGuard Home or Pi-hole) on a small always-on device. Point your router's DHCP-advertised DNS server at it (most consumer routers have a "custom DNS" or "upstream DNS" setting), and add a wildcard rewrite: `*.yourdomain.com` → the reverse proxy's LAN IP. This lets LAN clients resolve every subdomain locally instead of round-tripping out to the internet and back for a domain that's already yours.
+* **Off the LAN**: use a mesh VPN (e.g. Tailscale) on the same resolver device. Advertise a subnet route for your LAN's CIDR so VPN-connected devices can reach the whole network, and configure a split-DNS nameserver entry (in the VPN provider's admin console) restricted to your domain, pointing at the resolver's VPN IP. This gives VPN clients the same wildcard resolution as LAN clients, wherever they physically are.
+* **From the public internet**: only the subdomain(s) you actually want public get a real public DNS record (e.g. a Cloudflare-proxied A record). Everything else has no public DNS entry at all.
+* Configure each internal proxy host with two names: a short bare name for local convenience over plain HTTP, and the full subdomain for everything else, including all HTTPS access. **Always use the full subdomain form** — a bare single-label name has no TLS coverage and depends on an unreliable DNS search-domain suffix that doesn't work consistently across platforms.
 
 ## TLS
 
@@ -198,7 +234,7 @@ A mesh VPN client on the DNS/VPN device is the only way to reach LAN-only servic
 
 If your public IP isn't static, run a small DDNS updater container on a cron schedule (e.g. every 5 minutes) that checks your current public IP and updates the DNS record for your public host(s) via your DNS provider's API when it changes. Cap its resources tightly — it's a trivial workload. Without this, an ISP-forced IP change (e.g. after a router reboot) silently breaks public access until someone notices and fixes the DNS record by hand.
 
-# Tdarr Transcode Flow
+## Tdarr Transcode Flow
 
 How to configure [Tdarr](https://docs.tdarr.io/) (webUI at `http://<host>:8265`) to transcode a Movies/TV library down to one consistent, broadly-compatible format. This is all app-side configuration built in the Tdarr Flow editor — none of it lives in a config file, so nothing here is applied automatically. You recreate it by hand in the UI (or import a flow export).
 
@@ -206,10 +242,10 @@ How to configure [Tdarr](https://docs.tdarr.io/) (webUI at `http://<host>:8265`)
 
 What a compliant file looks like once the flow is done with it:
 
-- **Container:** MKV (provides a more flexible container for subtitles)
-- **Video:** H264, QSV hardware encode, preset `medium`, ≤1080p, ≤5500kbps (`maxrate` 6600k, `bufsize` 11000k)
-- **Audio:** AC3, evaluated and corrected per stream independently — mono/stereo ≤224kbps, 3+ channels ≤640kbps, loudness-normalized (`loudnorm=I=-24:LRA=13:TP=-2.0`) whenever a stream is re-encoded
-- **Subtitles:** ASS/SSA streams converted to plain-text SRT with inline styling tags stripped; other subtitle formats left untouched
+* **Container:** MKV (provides a more flexible container for subtitles)
+* **Video:** H264, QSV hardware encode, preset `medium`, ≤1080p, ≤5500kbps (`maxrate` 6600k, `bufsize` 11000k)
+* **Audio:** AC3, evaluated and corrected per stream independently — mono/stereo ≤224kbps, 3+ channels ≤640kbps, loudness-normalized (`loudnorm=I=-24:LRA=13:TP=-2.0`) whenever a stream is re-encoded
+* **Subtitles:** ASS/SSA streams converted to plain-text SRT with inline styling tags stripped; other subtitle formats left untouched
 
 Why these specific targets, rather than something like HEVC/CRF encoding, is covered in "Design Notes" below.
 
@@ -239,10 +275,10 @@ Steps, in order, as a Tdarr Flow:
 
 Per library (Movies and TV, configured the same way):
 
-- Transcode mode: **Flow** (not Classic)
-- `scheduledScanFindNew`: on, `scanOnStart`: on
-- `folderWatching` / `useFsEvents`: on
-- `holdNewFiles`: on, ~5 min — see "Why Hold New Files is required" below
+* Transcode mode: **Flow** (not Classic)
+* `scheduledScanFindNew`: on, `scanOnStart`: on
+* `folderWatching` / `useFsEvents`: on
+* `holdNewFiles`: on, ~5 min — see "Why Hold New Files is required" below
 
 **Node worker schedule** (Tdarr dashboard, on the transcode node): if you're sharing a GPU with something latency-sensitive (like a media server actively serving playback), disable `transcodegpu`/`healthcheckgpu` during your peak usage hours and leave them enabled the rest of the day. Leave the CPU-based workers off entirely if you want all transcoding to go through hardware encode.
 

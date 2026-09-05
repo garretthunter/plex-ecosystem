@@ -13,6 +13,11 @@ services:
       sonarr:
         condition: service_healthy
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
     environment:
       - PUID=1000
       - PGID=1000
