@@ -1,6 +1,27 @@
 # Plex Ecosystem
 
-Docker Compose stack for grabbing, organizing, and serving a media collection. Services communicate over a shared `media` bridge network managed by Compose. Plex and Atlas use host networking for direct hardware and LAN access.
+Docker Compose stack for acquiring, organizing, and serving a media collection. Services communicate over a shared `media` bridge network managed by Compose. Plex uses host networking for direct hardware and LAN access (DLNA/GDM discovery); the scheduler container behind Plex Music Ratings Sync also uses host networking, but for direct access to the Docker socket rather than the LAN.
+
+## Services at a Glance
+
+All services in this stack, listed in the order covered below: request, index/monitor, download, then serve, followed by supporting services. Apprise and Nginx Proxy Manager are referenced throughout but run in a separate `infrastructure` stack and are omitted here.
+
+| Service | Compose file | Purpose |
+| --- | --- | --- |
+| [Seerr](https://seerr.dev/) | `seerr.yml` | Front door for media requests |
+| [Prowlarr](https://wiki.servarr.com/en/prowlarr) | `prowlarr.yml` | Indexer manager for the Servarr apps |
+| [Sonarr](https://wiki.servarr.com/en/sonarr) | `sonarr.yml` | TV show monitoring/automation |
+| [Radarr](https://wiki.servarr.com/en/radarr) | `radarr.yml` | Movie monitoring/automation |
+| [SABnzbd](https://sabnzbd.org/) | `sabnzbd.yml` | Usenet download client |
+| [qBittorrent](https://www.qbittorrent.org/) | `qbittorrent.yml` | Torrent download client |
+| [Audiobookshelf](https://www.audiobookshelf.org/) | `audiobookshelf.yml` | Audiobook/podcast server and player |
+| [beets](https://beets.io/) (+ beets-audible) | `beets.yml` | Tags and files downloaded audiobooks |
+| [Plex](https://www.plex.tv/) | `plex.yml` | Media server |
+| [Plex Music Ratings Sync](https://github.com/rfgamaral/plex-music-ratings-sync) | `plex-music-ratings-sync.yml` | Syncs ratings between Plex and music files |
+| [Tautulli](https://tautulli.com/) | `tautulli.yml` | Plex usage stats |
+| [Tdarr](https://docs.tdarr.io/) | `tdarr.yml` | Normalizes the library to one codec/container |
+| [Notifiarr](https://notifiarr.com/) | `notifiarr.yml` | Notifiarr.com client |
+| [Cloudflare DDNS](https://hub.docker.com/r/favonia/cloudflare-ddns) | `cloudflare-ddns.yml` | Keeps the public DNS record current |
 
 ## Quick Start
 
@@ -61,7 +82,7 @@ The age *private* key never touches git — back it up in a password manager. `.
 
 ## Directory Structure
 
-Containers expect the following top level directory structure created in the host filesystem. I keep these files outside the container so they persist regardless of the containers' lifecycle.
+Containers expect the following top-level directory structure on the host filesystem. Data is kept outside the containers so it persists independent of container lifecycle.
 
 * backups - Persist backups across container destruction
 * config - Persist configuration data across container lifecycle for services that do not provide automated backups
@@ -79,7 +100,6 @@ ${HOST_MOUNT}
 │   ├── audiobookshelf
 │   │   └── metadata
 │   ├── beets
-│   ├── nginx-proxy-manager
 │   ├── notifiarr
 │   ├── plex-music-ratings-sync
 │   ├── prowlarr
@@ -110,7 +130,7 @@ ${HOST_MOUNT}
         └── incomplete
 ```
 
-Additionally, when running on a linux OS I create a **media** group, assign each of the application users to that group, and set the permissions for any directory the application must access to 2770 including the mount directory. If I were running Ubuntu and my USB drive mounted under /media, I would **sudo chmod 2770 /media/data**.
+On Linux, create a **media** group, add each application user to it, and set permissions to 2770 on any directory the applications must access, including the mount directory itself. Example: for a USB drive mounted at `/media` on Ubuntu, run **sudo chmod 2770 /media/data**.
 
 ### Disk Performance
 
@@ -127,13 +147,36 @@ ${LOCAL_MOUNT}
 
 No group/permission setup needed here the way `${HOST_MOUNT}` requires — this lives under the invoking user's own home directory, already owned correctly.
 
-## Plex Media Server
+## Request-to-Playback Pipeline
 
-Media streaming application [https://www.plex.tv/](https://www.plex.tv/). I run Plex in a Docker container on this Ubuntu server, and it performs well.
+The sections below follow a single pipeline: a request is made, the stack locates and downloads the media, and the result is filed where Plex or Audiobookshelf can serve it.
 
-### Audiobook Acquisition & Tagging
+> Request (Seerr) → Index/Monitor (Servarr Applications) → Download (Download Clients) → Serve (Plex Media Server / Audiobook Management)
 
-Audiobooks are found and downloaded manually from AudiobookBay via qBittorrent — AudiobookBay has asked indexer/automation tools (Prowlarr, Readarr, LazyLibrarian, etc.) not to scrape it, so search/download automation is intentionally out of scope here.
+The remaining sections — notifications, the reverse proxy, transcoding, and image maintenance — support this pipeline rather than form part of it.
+
+## Media Requests
+
+* [Seerr](https://seerr.dev/) — Media discovery and request management for Plex. Requests submitted here trigger Radarr/Sonarr.
+
+## Servarr Applications
+
+These three make up the *arr stack, together handling indexing (locating media sources), requesting (handing off to a download client), and monitoring (tracking new releases and quality upgrades):
+
+* [Prowlarr](https://wiki.servarr.com/en/prowlarr) — Indexer manager/proxy for the Servarr apps, supporting both torrent trackers and Usenet indexers.
+* [Sonarr](https://wiki.servarr.com/en/sonarr) — PVR for TV. Monitors RSS feeds for new episodes, downloads, sorts, and renames them, and can upgrade existing files when a better-quality release becomes available.
+* [Radarr](https://wiki.servarr.com/en/radarr) — PVR for movies. Monitors RSS feeds for new releases, downloads, sorts, and renames them, and can upgrade existing files when a better-quality release becomes available.
+
+## Download Clients
+
+These take requests from a Servarr application and download the media to local storage.
+
+* [SABnzbd](https://sabnzbd.org/) - Usenet download service.
+* [qBittorrent](https://www.qbittorrent.org/) - Torrent download service.
+
+## Audiobook Management
+
+Audiobooks follow a separate pipeline unrelated to Plex. They are located and downloaded manually from AudiobookBay via qBittorrent; AudiobookBay has requested that indexer/automation tools (Prowlarr, Readarr, LazyLibrarian, etc.) not scrape it, so search/download automation is intentionally out of scope here.
 
 * [Audiobookshelf](https://www.audiobookshelf.org/) (`audiobookshelf.yml`) — self-hosted audiobook/podcast server and player. Web UI at `http://<host>:13378`, also reverse-proxied at `books.blacktower.com` via `nginx-proxy-manager` (forward to `audiobookshelf:80` over plain `http` — port `13378` is only the host-published mapping, not what NPM should target).
 * [beets](https://beets.io/) + [beets-audible](https://github.com/Neurrone/beets-audible) (`beets.yml`, container `beets-audible`) — watches for audiobook files dropped by qBittorrent's `books` category, tags them via Audible/Audnexus, and files them into the Audiobookshelf library. Coupled to qBittorrent only through the shared `${HOST_MOUNT}/data/torrents/books` host folder, not through Compose — no `depends_on` needed.
@@ -153,13 +196,17 @@ Audiobooks are found and downloaded manually from AudiobookBay via qBittorrent �
 3. A confident match is copied into the Audiobookshelf library and the downloaded source is removed from `/input`. A success notification is sent through Apprise.
 4. A weak or missing match is left in `/input` with a `.beets-needs-review` marker and a review notification. Resolve it interactively with:
 
-  ```
+  ```bash
   ./beets/scripts/resolve-reviews.sh
   ```
 
   The helper runs `beet import` for each flagged item and leaves anything still unresolved in `/input` for later.
 
 Files are copied into the library rather than moved by Beets, but successfully processed torrent sources are removed by `import-watch.sh`. The hourly `library-prune.sh` job removes stale Beets database records when library files are deleted directly.
+
+## Plex Media Server
+
+Media streaming application ([plex.tv](https://www.plex.tv/)), run in a Docker container on Ubuntu. The following subsections cover services that support Plex: rating sync, usage monitoring, and library transcoding.
 
 ### Music Ratings Sync
 
@@ -171,26 +218,7 @@ Files are copied into the library rather than moved by Beets, but successfully p
 
 ### Transcoding
 
-* [Tdarr](https://docs.tdarr.io/) - Automated media transcoding and library health management, so files land in a consistent codec/container before Plex ever has to transcode on the fly.
-
-## Media Request Management
-
-* [Seer](https://seerr.dev/) - Plex media discovery and request management service.
-
-## Servarr Applications
-
-These **Index** (find where media is hosted), **Request** (send request to download client), and **Monitor** (search for new versions and media not yet released).
-
-* [Prowlarr](https://wiki.servarr.com/en/prowlarr) - Indexer manager/proxy built on the popular arr .net/reactjs base stack to integrate with your various PVR apps. Prowlarr supports management of both Torrent Trackers and Usenet Indexers.
-* [Sonarr](https://wiki.servarr.com/en/sonarr) - PVR for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new episodes of your favorite shows and will grab, sort and rename them. It can also be configured to automatically upgrade the quality of files already downloaded when a better quality format becomes available.
-* [Radarr](https://wiki.servarr.com/en/radarr) - Movie collection manager for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new movies and will interface with clients and indexers to grab, sort, and rename them. It can also be configured to automatically upgrade the quality of existing files in the library when a better quality format becomes available.
-
-## Download Clients
-
-These take requests from a Servarr application and download the media to local storage.
-
-* [SABnzbd](https://sabnzbd.org/) - Usenet download service.
-* [qBittorrent](https://www.qbittorrent.org/) - Torrent download service.
+* [Tdarr](https://docs.tdarr.io/) — Automated transcoding and library health checks, normalizing files to a consistent codec/container so Plex can direct-play them. See [Tdarr Transcode Flow](#tdarr-transcode-flow) for the full flow configuration.
 
 ## Notification Applications
 
@@ -201,7 +229,7 @@ Passes messages from applications to various services such as email and Discord.
 
 ## Reverse Proxy Server
 
-* [Nginx Proxy Manager](https://nginxproxymanager.com/guide/) - I put all docker containres behind an Nginx Proxy Manager. It provides seemless Let's Encrypt support for SSL and a friendly UI that allows me to customize URLs.
+* [Nginx Proxy Manager](https://nginxproxymanager.com/guide/) — Reverse proxy in front of all Docker containers, providing Let's Encrypt SSL and a UI for managing URLs. See [Access Architecture](#access-architecture) for the DNS/TLS/exposure pattern behind this setup.
 
 ## Docker Image Maintenance
 
@@ -221,46 +249,46 @@ Plex uses `network_mode: host` for DLNA/GDM discovery and direct LAN access.
 
 ## Access Architecture
 
-A pattern for exposing a set of self-hosted services under one domain, with a single reverse proxy, split-horizon DNS, one wildcard certificate, and a minimal public attack surface.
+A pattern for exposing a set of self-hosted services under one domain, with a single reverse proxy, split-horizon DNS, one wildcard certificate, and a minimal public attack surface. This is the general recipe behind the Reverse Proxy Server and Networking sections above, written up once so it doesn't need repeating per-service.
 
-## Network
+### Network
 
 Every container reaches the outside world through one reverse proxy (e.g. Nginx Proxy Manager) on a dedicated Docker network. No service publishes a web-UI port directly on the host — only ports that are genuinely not a web UI (e.g. a BitTorrent swarm port) are host-published, since those aren't something a proxy can front anyway.
 
 Anything that needs host networking for LAN discovery or its own vendor relay (e.g. a media server's native remote-access feature) is a deliberate exception to the "everything through the proxy" rule, not an oversight.
 
-## DNS
+### DNS
 
 * **On the LAN**: run a local DNS resolver (e.g. AdGuard Home or Pi-hole) on a small always-on device. Point your router's DHCP-advertised DNS server at it (most consumer routers have a "custom DNS" or "upstream DNS" setting), and add a wildcard rewrite: `*.yourdomain.com` → the reverse proxy's LAN IP. This lets LAN clients resolve every subdomain locally instead of round-tripping out to the internet and back for a domain that's already yours.
 * **Off the LAN**: use a mesh VPN (e.g. Tailscale) on the same resolver device. Advertise a subnet route for your LAN's CIDR so VPN-connected devices can reach the whole network, and configure a split-DNS nameserver entry (in the VPN provider's admin console) restricted to your domain, pointing at the resolver's VPN IP. This gives VPN clients the same wildcard resolution as LAN clients, wherever they physically are.
 * **From the public internet**: only the subdomain(s) you actually want public get a real public DNS record (e.g. a Cloudflare-proxied A record). Everything else has no public DNS entry at all.
 * Configure each internal proxy host with two names: a short bare name for local convenience over plain HTTP, and the full subdomain for everything else, including all HTTPS access. **Always use the full subdomain form** — a bare single-label name has no TLS coverage and depends on an unreliable DNS search-domain suffix that doesn't work consistently across platforms.
 
-## TLS
+### TLS
 
 Issue one wildcard certificate (`*.yourdomain.com` + the bare apex domain) via a DNS-01 challenge through your DNS provider's API (e.g. Cloudflare, using an API token scoped to DNS-edit on that zone only — not a full-account token). DNS-01 doesn't require any inbound port to be open, which is what makes it usable for internal-only hosts. Attach that one certificate, with the proxy's "force SSL" option enabled, to every internal-only host, plus the reverse proxy's own admin UI.
 
 Any service you deliberately expose to the public internet can keep its own separate certificate issued the normal way (HTTP-01), since it's already reachable on the open internet for the challenge to complete.
 
-## Public exposure
+### Public Exposure
 
 Default to nothing being public. Pick the smallest possible set of services that need to be reachable by people without VPN access (e.g. a family-facing request/discovery app), and give only those a public DNS record. Gate each public host with real authentication — either the app's own login if it has one you trust, or an access list / basic-auth layer at the reverse proxy if it doesn't.
 
 Everything else stays reachable only via the LAN or the mesh VPN, by subdomain, with no public DNS record and no path in from the open internet.
 
-## Remote access
+### Remote Access
 
 A mesh VPN client on the DNS/VPN device is the only way to reach LAN-only services from off the network. Any VPN-connected device gets full LAN subnet access plus correct wildcard-subdomain resolution via the split-DNS entry above — no separate VPN server, no router port-forwarding, no manual keypair management.
 
-## Keeping the public record current
+### Keeping the Public Record Current
 
-If your public IP isn't static, run a small DDNS updater container on a cron schedule (e.g. every 5 minutes) that checks your current public IP and updates the DNS record for your public host(s) via your DNS provider's API when it changes. Cap its resources tightly — it's a trivial workload. Without this, an ISP-forced IP change (e.g. after a router reboot) silently breaks public access until someone notices and fixes the DNS record by hand.
+If your public IP isn't static, run a small DDNS updater container on a cron schedule (e.g. every 5 minutes) that checks your current public IP and updates the DNS record for your public host(s) via your DNS provider's API when it changes. Cap its resources tightly — it's a trivial workload. This stack runs that as `cloudflare-ddns.yml`, keeping `request.blacktower.com` pointed at Seerr's public record. Without it, an ISP-forced IP change (e.g. after a router reboot) silently breaks public access until someone notices and fixes the DNS record by hand.
 
 ## Tdarr Transcode Flow
 
 How to configure [Tdarr](https://docs.tdarr.io/) (webUI at `http://<host>:8265`) to transcode a Movies/TV library down to one consistent, broadly-compatible format. This is all app-side configuration built in the Tdarr Flow editor — none of it lives in a config file, so nothing here is applied automatically. You recreate it by hand in the UI (or import a flow export).
 
-## Target Spec
+### Target Spec
 
 What a compliant file looks like once the flow is done with it:
 
@@ -271,7 +299,7 @@ What a compliant file looks like once the flow is done with it:
 
 Why these specific targets, rather than something like HEVC/CRF encoding, is covered in "Design Notes" below.
 
-## Building the Flow
+### Building the Flow
 
 Steps, in order, as a Tdarr Flow:
 
@@ -293,7 +321,7 @@ Steps, in order, as a Tdarr Flow:
 
 **Notifications:** two webhook endpoints (e.g. via [Apprise](https://github.com/caronc/apprise)) — one for success/warning events, one for failures. Give every notification node a status-code allowlist like `output2StatusCodes: 424,429,500-599` so a failed notification never blocks the actual file processing.
 
-## Library & Node Settings
+### Library & Node Settings
 
 Per library (Movies and TV, configured the same way):
 
@@ -304,9 +332,9 @@ Per library (Movies and TV, configured the same way):
 
 **Node worker schedule** (Tdarr dashboard, on the transcode node): if you're sharing a GPU with something latency-sensitive (like a media server actively serving playback), disable `transcodegpu`/`healthcheckgpu` during your peak usage hours and leave them enabled the rest of the day. Leave the CPU-based workers off entirely if you want all transcoding to go through hardware encode.
 
-## Design Notes
+### Design Notes
 
-The goal is to minimize server side transcoding. My primary devices are the Plex app on PS4 and Xbox to at least 1080p compliant TVs. Reasoning that would actually get re-broken if this flow were "simplified" without knowing why.
+The goal is to minimize server-side transcoding; primary playback devices are the Plex app on PS4 and Xbox, output to 1080p-capable TVs. The rationale below documents constraints that would be reintroduced by simplifying this flow without understanding why they exist.
 
 **Custom JS Functions replace Tdarr's built-in bitrate checks (`checkAudioBitrate`/`checkVideoBitrate`).** Both built-in nodes throw a hard error (`Audio/Video bitrate not found`) and fail the whole job if a stream has no explicit `bit_rate` field in Tdarr's scan — not rare on WEBDL sources, which frequently omit per-stream bitrate metadata entirely. The custom replacements read `ffProbeData` directly, fall back to estimating bitrate from container size ÷ duration minus known audio bits when the direct field is missing, and only treat a file as compliant when it's genuinely unknowable (no size/duration either) — they never throw. Reverting to the built-in nodes reintroduces real job failures on any library with WEBDL sources, not a theoretical edge case.
 

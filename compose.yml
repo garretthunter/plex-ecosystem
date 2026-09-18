@@ -19,6 +19,3 @@ include:
   - tautulli.yml            # Plex usage monitoring
   - tdarr.yml               # Automated media transcoding
   - cloudflare-ddns.yml     # Keeps request.blacktower.com's A record current
-
-# Disabled services
-#  - profilarr.yml           # Quality profile management for Radarr and Sonarr
