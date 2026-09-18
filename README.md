@@ -178,10 +178,10 @@ These take requests from a Servarr application and download the media to local s
 
 Audiobooks follow a separate pipeline unrelated to Plex. They are located and downloaded manually from AudiobookBay via qBittorrent; AudiobookBay has requested that indexer/automation tools (Prowlarr, Readarr, LazyLibrarian, etc.) not scrape it, so search/download automation is intentionally out of scope here.
 
-* [Audiobookshelf](https://www.audiobookshelf.org/) (`audiobookshelf.yml`) — self-hosted audiobook/podcast server and player. Web UI at `http://<host>:13378`, also reverse-proxied at `books.blacktower.com` via `nginx-proxy-manager` (forward to `audiobookshelf:80` over plain `http` — port `13378` is only the host-published mapping, not what NPM should target).
+* [Audiobookshelf](https://www.audiobookshelf.org/) (`audiobookshelf.yml`) — self-hosted audiobook/podcast server and player. Web UI at `http://<host>:13378`, also reverse-proxied at `books.example.com` via `nginx-proxy-manager` (forward to `audiobookshelf:80` over plain `http` — port `13378` is only the host-published mapping, not what NPM should target).
 * [beets](https://beets.io/) + [beets-audible](https://github.com/Neurrone/beets-audible) (`beets.yml`, container `beets-audible`) — watches for audiobook files dropped by qBittorrent's `books` category, tags them via Audible/Audnexus, and files them into the Audiobookshelf library. Coupled to qBittorrent only through the shared `${HOST_MOUNT}/data/torrents/books` host folder, not through Compose — no `depends_on` needed.
 
-**One-time qBittorrent setting:** beets-audible requires each book in its own folder, even single-file ones. Set the `books` category's Torrent Content Layout to "Create subfolder" (qBittorrent WebUI → Options → Downloads, or per-category override) so single-file torrents still land in their own folder. *(Not yet confirmed done as of 2026-09-13.)*
+**One-time qBittorrent setting:** beets-audible requires each book in its own folder, even single-file ones. Set the `books` category's Torrent Content Layout to "Create subfolder" (qBittorrent WebUI → Options → Downloads, or per-category override) so single-file torrents still land in their own folder.
 
 **Beets-audible details:**
 
@@ -282,7 +282,7 @@ A mesh VPN client on the DNS/VPN device is the only way to reach LAN-only servic
 
 ### Keeping the Public Record Current
 
-If your public IP isn't static, run a small DDNS updater container on a cron schedule (e.g. every 5 minutes) that checks your current public IP and updates the DNS record for your public host(s) via your DNS provider's API when it changes. Cap its resources tightly — it's a trivial workload. This stack runs that as `cloudflare-ddns.yml`, keeping `request.blacktower.com` pointed at Seerr's public record. Without it, an ISP-forced IP change (e.g. after a router reboot) silently breaks public access until someone notices and fixes the DNS record by hand.
+If your public IP isn't static, run a small DDNS updater container on a cron schedule (e.g. every 5 minutes) that checks your current public IP and updates the DNS record for your public host(s) via your DNS provider's API when it changes. Cap its resources tightly — it's a trivial workload. This stack runs that as `cloudflare-ddns.yml`, keeping `request.example.com` pointed at Seerr's public record. Without it, an ISP-forced IP change (e.g. after a router reboot) silently breaks public access until someone notices and fixes the DNS record by hand.
 
 ## Tdarr Transcode Flow
 

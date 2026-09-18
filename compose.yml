@@ -18,4 +18,4 @@ include:
   - plex-music-ratings-sync.yml # Sync ratings between Plex and music files
   - tautulli.yml            # Plex usage monitoring
   - tdarr.yml               # Automated media transcoding
-  - cloudflare-ddns.yml     # Keeps request.blacktower.com's A record current
+  - cloudflare-ddns.yml     # Keeps seerr's A record current
