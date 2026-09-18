@@ -55,9 +55,6 @@ tmpfile=$(mktemp)
     echo "==> Pulling latest images..."
     docker compose pull
 
-    echo "==> Rebuilding Plex with latest base image..."
-    docker compose build --pull plex
-
     echo "==> Recreating updated containers..."
     docker compose up -d
 

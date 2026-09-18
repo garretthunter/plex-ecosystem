@@ -1,23 +1,20 @@
 ##
 # Plex - Media sharing service https://plex.tv
-# Docker Hub: https://hub.docker.com/r/plexinc/pms-docker
+# Docker Hub: https://hub.docker.com/r/linuxserver/plex
 ##
 services:
   plex:
-    build:
-      context: .
-      dockerfile: dockerfile
     container_name: plex
+    image: lscr.io/linuxserver/plex:latest
     network_mode: host
     environment:
-      - PLEX_UID=1000
-      - PLEX_GID=1000
+      - PUID=1000
+      - PGID=1000
       - TZ=America/Los_Angeles
-      - CHANGE_CONFIG_DIR_OWNERSHIP=true
     devices:
       - /dev/dri:/dev/dri   # Intel HD 620 iGPU passthrough for hardware transcoding (Plex Pass)
     group_add:
-      - "992"               # host "render" group gid, grants PLEX_GID 1000 access to /dev/dri/renderD128
+      - "992"               # host "render" group gid, grants PGID 1000 access to /dev/dri/renderD128
     volumes:
       - ${LOCAL_MOUNT}/plex:/config
       # No separate mount for plex-transcode-temp: it's already reachable at

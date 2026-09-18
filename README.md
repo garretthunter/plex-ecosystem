@@ -76,6 +76,9 @@ ${HOST_MOUNT}
 │   ├── sonarr
 │   └── tautulli
 ├── config
+│   ├── audiobookshelf
+│   │   └── metadata
+│   ├── beets
 │   ├── nginx-proxy-manager
 │   ├── notifiarr
 │   ├── plex-music-ratings-sync
@@ -126,18 +129,37 @@ No group/permission setup needed here the way `${HOST_MOUNT}` requires — this 
 
 ## Plex Media Server
 
-Media streaming application [https://www.plex.tv/](https://www.plex.tv/). I run my stack on a Windows 11 Pro install and chose to run the native Plex server application. I ran Plex in a docker container and it was wayyyy sloowwwwwww and did not connect directly to Plex clients. I've left the Docker files in the repo for historical purposes.
+Media streaming application [https://www.plex.tv/](https://www.plex.tv/). I run Plex in a Docker container on this Ubuntu server, and it performs well.
 
-### Audiobook Support
+### Audiobook Acquisition & Tagging
 
-Plex is built from a custom Dockerfile that installs the [Audnexus.bundle](https://github.com/djdembeck/Audnexus.bundle) plugin at container startup via an init script. The plugin is cloned into the `/config` volume so it persists across container rebuilds.
+Audiobooks are found and downloaded manually from AudiobookBay via qBittorrent — AudiobookBay has asked indexer/automation tools (Prowlarr, Readarr, LazyLibrarian, etc.) not to scrape it, so search/download automation is intentionally out of scope here.
 
-### Audiobook Playback
+* [Audiobookshelf](https://www.audiobookshelf.org/) (`audiobookshelf.yml`) — self-hosted audiobook/podcast server and player. Web UI at `http://<host>:13378`, also reverse-proxied at `books.blacktower.com` via `nginx-proxy-manager` (forward to `audiobookshelf:80` over plain `http` — port `13378` is only the host-published mapping, not what NPM should target).
+* [beets](https://beets.io/) + [beets-audible](https://github.com/Neurrone/beets-audible) (`beets.yml`, container `beets-audible`) — watches for audiobook files dropped by qBittorrent's `books` category, tags them via Audible/Audnexus, and files them into the Audiobookshelf library. Coupled to qBittorrent only through the shared `${HOST_MOUNT}/data/torrents/books` host folder, not through Compose — no `depends_on` needed.
 
-For audiobook playback, use either:
+**One-time qBittorrent setting:** beets-audible requires each book in its own folder, even single-file ones. Set the `books` category's Torrent Content Layout to "Create subfolder" (qBittorrent WebUI → Options → Downloads, or per-category override) so single-file torrents still land in their own folder. *(Not yet confirmed done as of 2026-09-13.)*
 
-* iOS: [Prologue](https://prologue.audio/)
-* Android: [Chronicle Epilogue](https://www.chronicleapp.net/)
+**Beets-audible details:**
+
+* Plugin install: `beets/scripts/install-deps.sh` (runs on every container start via the linuxserver `custom-cont-init.d` convention — `pip install beets-audible`)
+* Config: `${HOST_MOUNT}/config/beets/config.yaml` (not in git; recreate from the beets-audible README if lost — series-aware `paths:` layout, `audible:` plugin settings with `fetch_art`/`write_description_file`/`write_reader_file` enabled)
+* Volumes: `/input` → `${HOST_MOUNT}/data/torrents/books` (qBittorrent's `books` category output), `/audiobooks` → `${HOST_MOUNT}/data/media/books/books` (the live Audiobookshelf library folder)
+
+**Normal use:**
+
+1. Place a `.torrent` file in the qBittorrent `books` torrent folder. qBittorrent downloads the audiobook into `${HOST_MOUNT}/data/torrents/books`, which is mounted as `/input` in the Beets container.
+2. `import-watch.sh` checks completed top-level files or folders every five minutes. It waits five minutes after the last filesystem change, then runs Beets in quiet mode.
+3. A confident match is copied into the Audiobookshelf library and the downloaded source is removed from `/input`. A success notification is sent through Apprise.
+4. A weak or missing match is left in `/input` with a `.beets-needs-review` marker and a review notification. Resolve it interactively with:
+
+  ```
+  ./beets/scripts/resolve-reviews.sh
+  ```
+
+  The helper runs `beet import` for each flagged item and leaves anything still unresolved in `/input` for later.
+
+Files are copied into the library rather than moved by Beets, but successfully processed torrent sources are removed by `import-watch.sh`. The hourly `library-prune.sh` job removes stale Beets database records when library files are deleted directly.
 
 ### Music Ratings Sync
 

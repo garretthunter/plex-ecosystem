@@ -12,11 +12,13 @@ include:
   - sonarr.yml              # TV show download automation
   - radarr.yml              # Movie download automation
   - seerr.yml               # Media discovery and request service
-  - plex/compose.yml        # Plex media server
+  - plex.yml                # Plex media server
+  - audiobookshelf.yml      # Audiobook and podcast server
+  - beets.yml               # Audiobook tagging/organizing automation
   - plex-music-ratings-sync.yml # Sync ratings between Plex and music files
-  - tautulli.yml               # Plex usage monitoring
-  - tdarr.yml                  # Automated media transcoding
-  - cloudflare-ddns.yml         # Keeps request.blacktower.com's A record current
+  - tautulli.yml            # Plex usage monitoring
+  - tdarr.yml               # Automated media transcoding
+  - cloudflare-ddns.yml     # Keeps request.blacktower.com's A record current
 
 # Disabled services
 #  - profilarr.yml           # Quality profile management for Radarr and Sonarr

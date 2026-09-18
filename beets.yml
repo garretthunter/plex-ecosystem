@@ -1,0 +1,43 @@
+##
+# Beets (+ beets-audible) - Audiobook tagging/organizing automation https://github.com/Neurrone/beets-audible
+# Docker Hub: https://hub.docker.com/r/linuxserver/beets
+# Watches for audiobook files dropped by qBittorrent (a separate stack, plex-ecosystem), tags
+# them via Audible/Audnexus, and files them into the Audiobookshelf library. Only coupled to
+# qBittorrent through the shared /input host folder, not through Compose, so it has no
+# depends_on here.
+##
+services:
+  beets:
+    container_name: beets-audible
+    # Pinned per beets-audible's own guidance: lscr.io images have had breaking changes
+    # even across minor versions.
+    image: lscr.io/linuxserver/beets:2.12.0-ls337
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - APPRISE_URL=http://apprise:8000
+      - APPRISE_KEY=${APPRISE_KEY}
+    volumes:
+      - ${HOST_MOUNT}/config/beets:/config
+      - ./beets/scripts:/custom-cont-init.d:ro
+      - ${HOST_MOUNT}/data/torrents/books:/input
+      - ${HOST_MOUNT}/data/media/books/books:/audiobooks
+    restart: unless-stopped
+    # Lightweight and only busy during an import; capped so it can't compete with Plex playback:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    networks:
+      - media
+      # Only needed to reach the plex-ecosystem stack's `apprise` container for
+      # needs-review notifications from import-watch.sh.
+      - proxied
+
+networks:
+  media:
+  proxied:
+    external: true
+    name: proxied

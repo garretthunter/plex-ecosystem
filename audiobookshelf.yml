@@ -1,0 +1,43 @@
+##
+# Audiobookshelf - Self-hosted audiobook and podcast server https://www.audiobookshelf.org/
+# Docker Hub: https://hub.docker.com/r/advplyr/audiobookshelf
+# Docs: https://www.audiobookshelf.org/docs
+##
+services:
+  audiobookshelf:
+    container_name: audiobookshelf
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    # Unlike linuxserver.io images, advplyr/audiobookshelf ignores PUID/PGID and always
+    # runs as root internally, so ownership has to be forced via Compose's `user:` instead.
+    user: "1000:1000"
+    environment:
+      - TZ=America/Los_Angeles
+    volumes:
+      - ${HOST_MOUNT}/config/audiobookshelf:/config
+      - ${HOST_MOUNT}/config/audiobookshelf/metadata:/metadata
+      - ${HOST_MOUNT}/data/media/books/books:/audiobooks
+      - ${HOST_MOUNT}/data/media/books/podcasts:/podcasts
+    ports:
+      - 13378:80
+    healthcheck:
+      # No curl in this image, only wget.
+      test: wget -qO- http://localhost:80/healthcheck || exit 1
+      start_period: 30s
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+    networks:
+      - media
+      - proxied
+
+networks:
+  media:
+  proxied:
+    external: true
+    name: proxied
